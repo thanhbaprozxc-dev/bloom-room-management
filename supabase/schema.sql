@@ -15,6 +15,7 @@ update public.properties set property_code='BLM-'||upper(substr(replace(id::text
 alter table public.properties alter column property_code set not null;
 create unique index if not exists properties_code_uidx on public.properties(property_code);
 create table if not exists public.property_settings(id uuid primary key default gen_random_uuid(),property_id uuid not null unique references public.properties(id) on delete cascade,electric_rate numeric(12,2) not null default 4000,water_rate numeric(12,2) not null default 0,default_service_fee numeric(14,2) not null default 0,billing_close_day int not null default 28 check(billing_close_day between 1 and 28),payment_due_day int not null default 5 check(payment_due_day between 1 and 28),bank_name text,bank_account text,bank_account_name text,qr_template text default 'compact2',invoice_note text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
+alter table public.property_settings add column if not exists bank_bin text default '970407';
 create table if not exists public.rooms(id uuid primary key default gen_random_uuid(),property_id uuid not null references public.properties(id),room_number text not null,floor int,area numeric(8,2),base_rent numeric(14,2) not null default 0,status text not null default 'vacant' check(status in('vacant','occupied','maintenance','reserved')),notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(property_id,room_number));
 create table if not exists public.tenants(id uuid primary key default gen_random_uuid(),full_name text not null,phone text,email text,nationality text not null default 'Việt Nam',identity_type text default 'CCCD',identity_number text,date_of_birth date,permanent_address text,emergency_contact text,notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
 create table if not exists public.leases(id uuid primary key default gen_random_uuid(),room_id uuid not null references public.rooms(id),representative_tenant_id uuid references public.tenants(id),start_date date not null,end_date date not null,monthly_rent numeric(14,2) not null default 0,deposit_amount numeric(14,2) not null default 0,payment_due_day int not null default 5 check(payment_due_day between 1 and 28),status text not null default 'active' check(status in('draft','active','expired','terminated')),ended_at date,end_reason text,deposit_refunded numeric(14,2) not null default 0,notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(end_date>=start_date));
@@ -33,3 +34,57 @@ do $$ declare t text; begin foreach t in array array['properties','property_sett
 insert into public.properties(name,property_code,address) values('Bloom Apartment','BLOOM','Đà Nẵng') on conflict(name) do update set property_code=coalesce(public.properties.property_code,excluded.property_code);
 insert into public.property_settings(property_id) select id from public.properties where name='Bloom Apartment' on conflict(property_id) do nothing;
 insert into public.rooms(property_id,room_number,floor,status) select p.id,v.room,left(v.room,1)::int,'vacant' from public.properties p cross join(values('101'),('102'),('103'),('104'),('105'),('201'),('202'),('203'),('204'),('205'),('301'),('302'),('303'),('304'),('305'),('401'),('402'),('403'),('404'),('405'))v(room) where p.name='Bloom Apartment' on conflict(property_id,room_number) do nothing;
+
+-- Ràng buộc đa tòa nhà: mọi dữ liệu nghiệp vụ mang property_id và không thể liên kết chéo tòa nhà.
+alter table public.tenants add column if not exists property_id uuid references public.properties(id) on delete restrict;
+alter table public.leases add column if not exists property_id uuid references public.properties(id) on delete restrict;
+alter table public.lease_tenants add column if not exists property_id uuid references public.properties(id) on delete restrict;
+alter table public.tenant_visas add column if not exists property_id uuid references public.properties(id) on delete restrict;
+alter table public.monthly_room_records add column if not exists property_id uuid references public.properties(id) on delete restrict;
+
+update public.tenants t set property_id=coalesce(t.property_id,(select r.property_id from public.lease_tenants lt join public.leases l on l.id=lt.lease_id join public.rooms r on r.id=l.room_id where lt.tenant_id=t.id limit 1),(select id from public.properties order by created_at limit 1));
+update public.leases l set property_id=r.property_id from public.rooms r where r.id=l.room_id and l.property_id is null;
+update public.lease_tenants lt set property_id=l.property_id from public.leases l where l.id=lt.lease_id and lt.property_id is null;
+update public.tenant_visas v set property_id=t.property_id from public.tenants t where t.id=v.tenant_id and v.property_id is null;
+update public.monthly_room_records m set property_id=b.property_id from public.billing_periods b where b.id=m.billing_period_id and m.property_id is null;
+
+alter table public.tenants alter column property_id set not null;
+alter table public.leases alter column property_id set not null;
+alter table public.lease_tenants alter column property_id set not null;
+alter table public.tenant_visas alter column property_id set not null;
+alter table public.monthly_room_records alter column property_id set not null;
+
+create unique index if not exists rooms_id_property_uidx on public.rooms(id,property_id);
+create unique index if not exists tenants_id_property_uidx on public.tenants(id,property_id);
+create unique index if not exists leases_id_property_uidx on public.leases(id,property_id);
+create unique index if not exists periods_id_property_uidx on public.billing_periods(id,property_id);
+create unique index if not exists leases_one_active_room_uidx on public.leases(room_id) where status='active';
+create unique index if not exists tenants_identity_property_uidx on public.tenants(property_id,identity_type,identity_number) where identity_number is not null and btrim(identity_number)<>'';
+create unique index if not exists visas_number_property_uidx on public.tenant_visas(property_id,visa_number) where visa_number is not null and btrim(visa_number)<>'';
+
+do $$ begin
+  alter table public.leases add constraint leases_room_property_fk foreign key(room_id,property_id) references public.rooms(id,property_id) on delete restrict;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.leases add constraint leases_tenant_property_fk foreign key(representative_tenant_id,property_id) references public.tenants(id,property_id) on delete restrict;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.lease_tenants add constraint lease_tenants_lease_property_fk foreign key(lease_id,property_id) references public.leases(id,property_id) on delete cascade;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.lease_tenants add constraint lease_tenants_tenant_property_fk foreign key(tenant_id,property_id) references public.tenants(id,property_id) on delete restrict;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.tenant_visas add constraint visas_tenant_property_fk foreign key(tenant_id,property_id) references public.tenants(id,property_id) on delete cascade;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.monthly_room_records add constraint records_period_property_fk foreign key(billing_period_id,property_id) references public.billing_periods(id,property_id) on delete cascade;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.monthly_room_records add constraint records_room_property_fk foreign key(room_id,property_id) references public.rooms(id,property_id) on delete restrict;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.monthly_room_records add constraint records_lease_property_fk foreign key(lease_id,property_id) references public.leases(id,property_id) on delete restrict;
+exception when duplicate_object then null; end $$;
+do $$ begin alter table public.rooms add constraint rooms_base_rent_nonnegative check(base_rent>=0); exception when duplicate_object then null; end $$;
+do $$ begin alter table public.leases add constraint leases_money_nonnegative check(monthly_rent>=0 and deposit_amount>=0 and deposit_refunded>=0); exception when duplicate_object then null; end $$;

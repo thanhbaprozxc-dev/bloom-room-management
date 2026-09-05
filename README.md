@@ -6,9 +6,11 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 
 - Dashboard phòng, công nợ, cảnh báo hợp đồng và visa.
 - Danh sách nhiều tòa nhà, có mã riêng và chức năng thêm, sửa, xóa an toàn.
+- Bộ chọn tòa nhà dùng chung; Phòng, Khách thuê, Hợp đồng, Dữ liệu tháng, Thu tiền, Visa và Báo cáo tự lọc theo tòa nhà.
 - Quản lý phòng, khách thuê, hợp đồng và lịch sử.
 - Nhập điện, nước, dịch vụ, nợ cũ theo từng tháng.
 - Phát hành hóa đơn, thanh toán một phần hoặc toàn bộ.
+- Xem và tải hóa đơn PNG theo thiết kế Bloom, có VietQR và tài khoản riêng của từng tòa nhà.
 - Cảnh báo hợp đồng/visa theo thời gian còn lại.
 - Giao diện responsive cho máy tính và điện thoại.
 - Mật khẩu quản trị, tài khoản chỉ xem và nhật ký thay đổi.
@@ -26,6 +28,8 @@ Mở Supabase → SQL Editor, chạy toàn bộ `supabase/schema.sql`. Tệp t�
 - `monthly_room_records.id` → `invoices.record_id` → `payments.invoice_id`.
 
 Các khóa chính dùng UUID. `property_code` là mã nghiệp vụ duy nhất để tìm và nhận biết tòa nhà. Tòa nhà còn phòng hoặc dữ liệu liên quan sẽ không thể bị xóa.
+
+Database còn dùng khóa ngoại ghép `(id, property_id)` để ngăn liên kết phòng, khách, hợp đồng, visa hoặc dữ liệu tháng của hai tòa nhà khác nhau. Mỗi phòng chỉ có tối đa một hợp đồng đang hiệu lực; số giấy tờ và số visa không được trùng trong cùng tòa nhà.
 
 ## Biến môi trường Vercel
 
