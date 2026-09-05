@@ -9,7 +9,8 @@
   <style>
     :root{--o:#556b2f;--o2:#718238;--bg:#f5f6ef;--white:#fff;--ink:#20251b;--muted:#7b8175;--line:#e3e7dc;--soft:#edf1e6;--warn:#fff4df}
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif;-webkit-text-size-adjust:100%}
     .app{display:flex;min-height:100vh}
     aside{position:fixed;inset:0 auto 0 0;width:238px;background:#fff;border-right:1px solid var(--line);padding:24px 15px}
     .logo{font-weight:900;font-size:20px;letter-spacing:.06em;padding:5px 10px 30px}
@@ -178,13 +179,67 @@
 
     @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}}
     @media(max-width:700px){
-      aside{position:static;width:100%;height:auto;border:0;border-bottom:1px solid var(--line)}
-      .app{display:block}
-      main{margin:0;width:100%;padding:18px}
-      .kpis{grid-template-columns:1fr 1fr}
-      .top{flex-direction:column;align-items:flex-start}
-      .rooms{grid-template-columns:repeat(3,1fr)}
+      body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+      .app{display:block;min-height:100dvh}
+      aside{position:fixed;z-index:80;inset:auto 0 0;width:100%;height:auto;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border:0;border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(40,50,20,.08)}
+      .logo{display:none}
+      nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+      nav a{display:flex;align-items:center;justify-content:center;min-height:48px;margin:0;padding:8px 4px;text-align:center;font-size:12px}
+      main{margin:0;width:100%;padding:18px 14px 24px}
+      .top{flex-direction:column;align-items:stretch;gap:14px;margin-bottom:18px}
+      h1{font-size:24px}
+      .sub{font-size:12px;line-height:1.45}
+      .top>div:last-child{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+      button,select,input{min-height:44px}
+      .kpis{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px;margin-right:-14px;padding-right:14px;scrollbar-width:none}
+      .kpis::-webkit-scrollbar{display:none}
+      .kpis .card{min-width:155px;scroll-snap-align:start;padding:15px}
+      .val{font-size:21px}
+      .layout{grid-template-columns:1fr;gap:12px;margin-top:12px}
+      .card{border-radius:14px;padding:15px}
+      .chart{height:190px}
+      .bw{min-width:28px}
+      .rooms{grid-template-columns:repeat(3,1fr);gap:7px}
+      .room{min-height:64px;padding:12px 10px}
+      .tablecard{margin-top:12px;padding:14px 10px}
+      .toolbar{align-items:stretch;flex-direction:column;margin-bottom:12px;padding:0 4px}
+      .toolbar h3{line-height:1.4}
+      .search{width:100%;font-size:16px}
+      .wrap{overflow:visible}
+      table,tbody{display:block;width:100%}
+      thead{display:none}
+      tbody{display:grid;gap:10px}
+      tbody tr{display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 4px 14px rgba(40,50,20,.035)}
+      tbody td{display:flex;flex-direction:column;gap:4px;padding:8px;border:0;white-space:normal;font-size:13px;min-width:0}
+      tbody td::before{content:attr(data-label);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+      tbody td:first-child{grid-column:1/-1;border-bottom:1px solid var(--line);font-size:18px;padding-bottom:10px}
+      tbody td:nth-last-child(-n+2){justify-content:flex-end}
+      tbody td:last-child button{width:100%}
+      .badge{display:flex;align-items:center;justify-content:center;min-height:40px;font-size:11px}
+      .modal{padding:10px;align-items:flex-start}
+      .modalbox{margin:auto 0;max-width:100%}
+      .invoice-card{border-radius:20px;padding:26px 18px}
+      .inv-title{font-size:23px}
+      .inv-info-row{font-size:14px;gap:10px}
+      .inv-table td{font-size:13px;padding:9px 3px}
+      .total-box{font-size:20px}
       .qr-section{flex-direction:column;text-align:center}
+      .qr-img{width:128px;height:128px}
+      .modal-actions{position:sticky;bottom:0;z-index:2;flex-direction:column;padding:10px}
+      .modal-actions>div,.modal-actions>div:last-child{display:grid!important;grid-template-columns:1fr!important;width:100%}
+      .modal-actions button{width:100%}
+      #addModal .modalbox{padding:18px!important}
+      .form-grid{grid-template-columns:1fr;gap:12px}
+      .form-group input,.form-group select{font-size:16px}
+      .form-actions{position:sticky;bottom:0;background:#fff;padding-top:10px}
+      .form-actions button{flex:1}
+    }
+
+    @media(max-width:380px){
+      main{padding-left:10px;padding-right:10px}
+      .rooms{grid-template-columns:repeat(2,1fr)}
+      nav a{font-size:11px}
+      .kpis .card{min-width:145px}
     }
   </style>
 </head>
@@ -445,21 +500,21 @@ function renderTable() {
   const rows = DATA.filter(x => x.room.toLowerCase().includes(q));
   document.getElementById('tbody').innerHTML = rows.map(x => `
     <tr>
-      <td><b>${x.room}</b></td>
-      <td>${fmt(x.rent)}</td>
-      <td>${fmt(x.service)}</td>
-      <td>${x.start}</td>
-      <td>${x.end}</td>
-      <td>${x.usage}</td>
-      <td>${fmt(x.electric)}</td>
-      <td>${fmt(x.debt)}</td>
-      <td><b>${fmt(x.payable)}</b></td>
-      <td>
+      <td data-label="Phòng"><b>${x.room}</b></td>
+      <td data-label="Tiền phòng">${fmt(x.rent)}</td>
+      <td data-label="Dịch vụ">${fmt(x.service)}</td>
+      <td data-label="Điện đầu">${x.start}</td>
+      <td data-label="Điện cuối">${x.end}</td>
+      <td data-label="Đã dùng">${x.usage}</td>
+      <td data-label="Tiền điện">${fmt(x.electric)}</td>
+      <td data-label="Nợ trước">${fmt(x.debt)}</td>
+      <td data-label="Phải đóng"><b>${fmt(x.payable)}</b></td>
+      <td data-label="Trạng thái">
         <span class="badge ${x.paid ? '' : 'unpaid'}" onclick="togglePayment('${x.room}', event)">
           ${x.paid ? '✓ Đã thu' : '⏳ Chưa thu'}
         </span>
       </td>
-      <td>
+      <td data-label="Hóa đơn">
         <button onclick="openBill('${x.room}')">Xem Bill</button>
       </td>
     </tr>
