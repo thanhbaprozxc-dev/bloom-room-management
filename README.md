@@ -1,42 +1,40 @@
-# Bloom Apartment — Vercel + Supabase
+# Bloom Apartment v3
 
-Ứng dụng dùng Vercel để chạy giao diện/API và Supabase PostgreSQL để lưu dữ liệu chung. Khóa `service_role` chỉ tồn tại trong biến môi trường của Vercel, không xuất hiện trong trình duyệt.
+Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm database chung.
 
-## 1. Tạo database Supabase
+## Chức năng
 
-1. Đăng nhập Supabase và tạo project mới.
-2. Mở **SQL Editor** → **New query**.
-3. Sao chép toàn bộ nội dung `supabase/schema.sql`, chạy bằng nút **Run**.
-4. Vào **Project Settings → API** và ghi lại:
-   - Project URL.
-   - `service_role` secret key. Không dùng `anon` key cho biến này và không chia sẻ khóa.
+- Dashboard phòng, công nợ, cảnh báo hợp đồng và visa.
+- Quản lý phòng, khách thuê, hợp đồng và lịch sử.
+- Nhập điện, nước, dịch vụ, nợ cũ theo từng tháng.
+- Phát hành hóa đơn, thanh toán một phần hoặc toàn bộ.
+- Cảnh báo hợp đồng/visa theo thời gian còn lại.
+- Giao diện responsive cho máy tính và điện thoại.
+- Mật khẩu quản trị, tài khoản chỉ xem và nhật ký thay đổi.
 
-## 2. Đưa mã nguồn lên GitHub
+## Cài database
 
-Tạo repository mới, sau đó tải toàn bộ nội dung thư mục này lên repository. `index.html`, `api`, `supabase`, `package.json` và `vercel.json` phải nằm ở thư mục gốc.
+Mở Supabase → SQL Editor, chạy toàn bộ `supabase/schema.sql`. Tệp tạo cấu trúc mới và 20 phòng từ 101 đến 405. Bảng `room_bills` cũ không bị xóa nên dữ liệu trước đây vẫn an toàn để đối chiếu.
 
-## 3. Triển khai Vercel
+## Biến môi trường Vercel
 
-1. Đăng nhập Vercel bằng GitHub.
-2. Chọn **Add New → Project** và import repository vừa tạo.
-3. Framework Preset: **Other**. Không cần Build Command và Output Directory.
-4. Thêm ba biến môi trường cho Production, Preview và Development:
+```text
+SUPABASE_URL=https://PROJECT.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
+ADMIN_PASSWORD=...
+VIEWER_PASSWORD=...
+```
 
-| Tên | Giá trị |
-| --- | --- |
-| `SUPABASE_URL` | Project URL của Supabase |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role secret key |
-| `ADMIN_PASSWORD` | Mật khẩu riêng, dài và khó đoán |
+`VIEWER_PASSWORD` không bắt buộc. Không đưa khóa vào `index.html` hoặc commit lên GitHub.
 
-5. Nhấn **Deploy**. Vercel sẽ cấp địa chỉ dạng `https://ten-du-an.vercel.app`.
+## Triển khai
 
-## 4. Sử dụng
+Đẩy toàn bộ thư mục lên nhánh `main`; Vercel sẽ tự triển khai. Sau khi đổi biến môi trường, vào Deployments và Redeploy.
 
-Mở địa chỉ Vercel trên bất kỳ máy nào, nhập cùng mật khẩu quản trị. Tất cả thiết bị sẽ dùng chung dữ liệu trong Supabase.
+## Quy trình sử dụng
 
-## Bảo mật
-
-- Tuyệt đối không đưa `SUPABASE_SERVICE_ROLE_KEY` vào `index.html` hoặc GitHub.
-- Bảng đã bật Row Level Security và không có quyền truy cập công khai.
-- Mật khẩu quản trị được giữ trong `sessionStorage`, tự mất khi đóng tab trình duyệt.
-- Khi đổi biến môi trường trên Vercel, hãy redeploy để áp dụng.
+1. Thêm khách thuê.
+2. Tạo hợp đồng, chọn phòng và người đại diện.
+3. Cuối tháng nhập chỉ số và chi phí từng phòng.
+4. Phát hành hóa đơn theo kỳ.
+5. Ghi nhận từng lần thanh toán; trạng thái tự đổi thành chưa thu, thu một phần hoặc đã thu.
