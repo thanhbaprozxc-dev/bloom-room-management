@@ -1,0 +1,7 @@
+{
+  "name": "bloom-room-management-vercel",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Bloom Apartment trên Vercel và Supabase",
+  "engines": { "node": ">=22" }
+}

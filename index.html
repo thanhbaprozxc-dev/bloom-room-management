@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bloom Apartment — Dashboard & Hóa Đơn</title>
+  <!-- Thư viện chụp và tải ảnh hóa đơn -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root{--o:#556b2f;--o2:#718238;--bg:#f5f6ef;--white:#fff;--ink:#20251b;--muted:#7b8175;--line:#e3e7dc;--soft:#edf1e6;--warn:#fff4df}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+    .app{display:flex;min-height:100vh}
+    aside{position:fixed;inset:0 auto 0 0;width:238px;background:#fff;border-right:1px solid var(--line);padding:24px 15px}
+    .logo{font-weight:900;font-size:20px;letter-spacing:.06em;padding:5px 10px 30px}
+    .logo span{color:var(--o)}
+    nav a{display:block;text-decoration:none;color:#555;padding:12px 13px;border-radius:10px;margin:4px 0;font-size:14px}
+    nav a.active,nav a:hover{background:var(--soft);color:var(--o);font-weight:700}
+    main{margin-left:238px;width:calc(100% - 238px);padding:30px;max-width:1550px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:24px}
+    h1{margin:0;font-size:28px}
+    .sub{color:var(--muted);font-size:13px;margin-top:5px}
+    select,button,input{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;font:inherit}
+    button{color:var(--o);font-weight:700;cursor:pointer}
+    button.btn-primary{background:var(--o);color:#fff;border:none}
+    button.btn-primary:hover{background:var(--o2)}
+
+    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 5px 20px rgba(40,50,20,.035)}
+    .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .val{font-size:24px;font-weight:900;margin-top:8px}
+    .hint{font-size:11px;color:var(--o);margin-top:5px}
+
+    .layout{display:grid;grid-template-columns:1.3fr .9fr;gap:16px;margin-top:16px}
+    h3{font-size:16px;margin:0 0 14px}
+    .chart{height:220px;display:flex;align-items:end;gap:7px;border-top:1px solid var(--line);padding:12px 4px 3px;overflow-x:auto}
+    .bw{height:100%;min-width:32px;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:5px}
+    .bar{width:72%;max-width:42px;background:var(--o);border-radius:7px 7px 2px 2px;min-height:4px;transition:height .3s}
+    .bw small{font-size:9px;color:var(--muted)}
+
+    .rooms{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .room{border:1px solid var(--line);border-radius:11px;padding:11px;cursor:pointer;position:relative}
+    .room:hover{border-color:#b8c29f}
+    .room b{font-size:14px}
+    .room small{display:block;margin-top:5px;font-size:9px;color:var(--muted)}
+    .room.occ small{color:var(--o)}
+    .room.empty small{color:#9a6b25}
+    .room-badge{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%}
+    .room-badge.paid{background:var(--o)}
+    .room-badge.unpaid{background:#e09b2d}
+
+    .tablecard{margin-top:16px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    .search{width:230px}
+    .wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{padding:11px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+    th{font-size:9px;color:var(--muted);text-transform:uppercase}
+    .badge{display:inline-block;padding:5px 8px;border-radius:999px;background:var(--soft);color:var(--o);font-size:9px;font-weight:800;cursor:pointer;user-select:none;border:1px solid transparent}
+    .badge:hover{border-color:currentColor}
+    .badge.unpaid{background:var(--warn);color:#9a6b25}
+
+    /* Modal Backdrop */
+    .modal{display:none;position:fixed;inset:0;background:rgba(20,25,15,.55);align-items:center;justify-content:center;padding:20px;z-index:99;overflow-y:auto}
+    .modal.open{display:flex}
+    .modalbox{background:transparent;width:100%;max-width:540px;position:relative}
+
+    /* Bìa và hóa đơn mẫu chuẩn Vintage Bloom */
+    .invoice-card {
+      background: #fdfef9;
+      border: 1.5px solid #a3b18a;
+      border-radius: 28px;
+      padding: 34px 30px;
+      color: #2b3320;
+      position: relative;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+    .corner-sparkle {
+      position: absolute;
+      color: #7b8f60;
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 300;
+      user-select: none;
+    }
+    .sp-tl { top: 12px; left: 14px; }
+    .sp-tr { top: 12px; right: 14px; }
+    .sp-bl { bottom: 12px; left: 14px; }
+    .sp-br { bottom: 12px; right: 14px; }
+
+    .inv-header { text-align: center; }
+    .inv-title { font-size: 26px; font-weight: 800; letter-spacing: 0.18em; color: #323e20; margin: 0; }
+    .inv-sub { font-size: 13px; letter-spacing: 0.28em; color: #43522f; margin: 3px 0 12px; font-weight: 600; }
+    .inv-pill {
+      display: inline-block;
+      background: #394a26;
+      color: #fff;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      padding: 6px 20px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .inv-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 22px 0 16px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #202715;
+    }
+    .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .inv-table td {
+      padding: 10px 4px;
+      border-bottom: 1px dashed #cbd5be;
+      font-size: 14px;
+      color: #2e381f;
+      white-space: normal;
+    }
+    .inv-table td:first-child { font-weight: 700; text-align: left; }
+    .inv-table td:last-child { font-weight: 800; text-align: right; }
+    .total-box-wrap { text-align: center; margin: 18px 0; }
+    .total-label { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #2e381f; margin-bottom: 6px; }
+    .total-box {
+      background: #344421;
+      color: #fff;
+      font-size: 23px;
+      font-weight: 900;
+      padding: 12px;
+      border-radius: 999px;
+      display: block;
+      letter-spacing: 0.05em;
+    }
+    .qr-section {
+      border-top: 1px dashed #cbd5be;
+      padding-top: 15px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .qr-img {
+      width: 105px;
+      height: 105px;
+      border: 1px solid #d4dec4;
+      border-radius: 8px;
+      background: #fff;
+      padding: 4px;
+      object-fit: contain;
+    }
+    .qr-details { font-size: 11px; line-height: 1.5; color: #3d4a2b; }
+    .qr-details b { color: #1c2311; font-size: 12px; }
+    .inv-thankyou {
+      text-align: center;
+      font-family: "Georgia", serif;
+      font-style: italic;
+      font-size: 17px;
+      font-weight: 700;
+      color: #3b4927;
+      margin-top: 16px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      background: #fff;
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    /* Modal Thêm phòng */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .form-group{display:flex;flex-direction:column;gap:4px}
+    .form-group label{font-size:11px;font-weight:700;color:var(--muted)}
+    .form-group input{padding:8px 10px}
+    .form-actions{margin-top:18px;display:flex;justify-content:flex-end;gap:10px}
+
+    @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}}
+    @media(max-width:700px){
+      aside{position:static;width:100%;height:auto;border:0;border-bottom:1px solid var(--line)}
+      .app{display:block}
+      main{margin:0;width:100%;padding:18px}
+      .kpis{grid-template-columns:1fr 1fr}
+      .top{flex-direction:column;align-items:flex-start}
+      .rooms{grid-template-columns:repeat(3,1fr)}
+      .qr-section{flex-direction:column;text-align:center}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="logo">BLOOM <span>APARTMENT</span></div>
+    <nav>
+      <a class="active" href="#">⌂ Dashboard</a>
+      <a href="#rooms">▦ Phòng</a>
+      <a href="#billing">▤ Thu tiền</a>
+      <a href="#reports">◫ Báo cáo</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="sub">Hệ thống quản lý chu kỳ thu tiền phòng · Tháng 09/2026</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" onclick="openAddModal()">+ Thêm phòng</button>
+        <button onclick="window.print()">In danh sách</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <section class="kpis">
+      <div class="card"><div class="lbl">Tổng phòng</div><div class="val" id="rooms">0</div><div class="hint" id="roomsSub">0 phòng</div></div>
+      <div class="card"><div class="lbl">Đang thuê</div><div class="val" id="occ">0</div><div class="hint">Có tiền phòng</div></div>
+      <div class="card"><div class="lbl">Tổng phải đóng</div><div class="val" id="rev">0 ₫</div><div class="hint">Kỳ hiện tại</div></div>
+      <div class="card"><div class="lbl">Đã thu</div><div class="val" id="paid" style="color:var(--o)">0 ₫</div><div class="hint" id="paidRatio">0%</div></div>
+      <div class="card"><div class="lbl">Còn tồn / Nợ</div><div class="val" id="debt" style="color:#c94a29">0 ₫</div><div class="hint">Chưa thanh toán</div></div>
+    </section>
+
+    <!-- Visual charts and status grid -->
+    <section class="layout">
+      <div class="card" id="reports">
+        <h3>Tổng phải đóng theo phòng</h3>
+        <div class="chart" id="chart"></div>
+      </div>
+      <div class="card" id="roomsSection">
+        <h3>Trạng thái phòng</h3>
+        <div class="rooms" id="roomGrid"></div>
+      </div>
+    </section>
+
+    <!-- Table Section -->
+    <section class="card tablecard" id="billing">
+      <div class="toolbar">
+        <h3 style="margin:0">Bảng thu tiền tháng 09/2026</h3>
+        <input class="search" id="search" placeholder="Tìm phòng..." oninput="renderTable()">
+      </div>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Phòng</th>
+              <th>Tiền phòng</th>
+              <th>Dịch vụ</th>
+              <th>Điện đầu</th>
+              <th>Điện cuối</th>
+              <th>Đã dùng</th>
+              <th>Tiền điện</th>
+              <th>Nợ trước</th>
+              <th>Phải đóng</th>
+              <th>Trạng thái</th>
+              <th>Hóa đơn</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal Hiển thị Hóa đơn Chuẩn Mẫu Đẹp -->
+<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeBill()">
+  <div class="modalbox">
+    <!-- Khu vực in / xuất ảnh -->
+    <div class="invoice-card" id="invoiceCard">
+      <div class="corner-sparkle sp-tl">✦</div>
+      <div class="corner-sparkle sp-tr">✦</div>
+      <div class="corner-sparkle sp-bl">✦</div>
+      <div class="corner-sparkle sp-br">✦</div>
+
+      <div class="inv-header">
+        <h2 class="inv-title">BLOOM</h2>
+        <div class="inv-sub">APARTMENT</div>
+        <div class="inv-pill">MONTHLY RENT BILL</div>
+      </div>
+
+      <div class="inv-info-row">
+        <span>Phòng: <span id="billRoom">404</span></span>
+        <span>Tháng: <span id="billMonth">09/2026</span></span>
+      </div>
+
+      <table class="inv-table">
+        <tbody>
+          <tr><td>Tiền phòng</td><td id="bRent">0</td></tr>
+          <tr><td>Phí dịch vụ</td><td id="bService">0</td></tr>
+          <tr><td>Điện đầu</td><td id="bStart">0</td></tr>
+          <tr><td>Điện cuối</td><td id="bEnd">0</td></tr>
+          <tr><td>Đã dùng</td><td id="bUsage">0</td></tr>
+          <tr><td>Tiền điện</td><td id="bElectric">0</td></tr>
+          <tr><td>Nợ phí dịch vụ tháng trước:</td><td id="bDebt">0</td></tr>
+        </tbody>
+      </table>
+
+      <div class="total-box-wrap">
+        <div class="total-label">TỔNG THANH TOÁN</div>
+        <div class="total-box" id="bPayable">0 VNĐ</div>
+      </div>
+
+      <div class="qr-section">
+        <img class="qr-img" id="billQrImg" src="" alt="VietQR Payment">
+        <div class="qr-details">
+          <div style="font-weight:700;margin-bottom:3px">QR chuyển khoản</div>
+          • Account holder's full name: Ho Thi Dieu Hien<br>
+          • Account number: <b>6868684307</b><br>
+          • Bank name: Vietnam Technological and Commercial Joint Stock Bank (Techcombank)<br>
+          • Address: 191 Bà Triệu, Quận Hai Bà Trưng, Hà Nội, Việt Nam.<br>
+          • SWIFT Code: VTCBVNVX
+        </div>
+      </div>
+
+      <div class="inv-thankyou">Thank you ❤</div>
+    </div>
+
+    <!-- Thanh công cụ bên dưới Bill -->
+    <div class="modal-actions">
+      <div>
+        <button class="btn-primary" id="toggleStatusBtn" onclick="toggleCurrentBillStatus()">Đổi trạng thái</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="downloadInvoicePNG()" class="btn-primary" style="background:#28593a">⬇ Tải hóa đơn (PNG)</button>
+        <button onclick="closeBill()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Thêm phòng -->
+<div class="modal" id="addModal" onclick="if(event.target.id==='addModal')closeAddModal()">
+  <div class="modalbox" style="background:#fff;padding:24px;border-radius:18px">
+    <h2 style="margin:0">Thêm dữ liệu phòng</h2>
+    <form id="addRoomForm" onsubmit="handleSaveRoom(event)">
+      <div class="form-grid">
+        <div class="form-group"><label>Số phòng (*)</label><input id="f_room" placeholder="Ví dụ: 501" required></div>
+        <div class="form-group"><label>Tiền thuê (VNĐ)</label><input type="number" id="f_rent" value="5000000" min="0" required></div>
+        <div class="form-group"><label>Phí dịch vụ</label><input type="number" id="f_service" value="200000" min="0"></div>
+        <div class="form-group"><label>Nợ tháng trước</label><input type="number" id="f_debt" value="0" min="0"></div>
+        <div class="form-group"><label>Điện đầu</label><input type="number" step="0.1" id="f_start" value="100" required></div>
+        <div class="form-group"><label>Điện cuối</label><input type="number" step="0.1" id="f_end" value="250" required></div>
+        <div class="form-group"><label>Đơn giá điện</label><input type="number" id="f_rate" value="4000"></div>
+        <div class="form-group">
+          <label>Trạng thái thu</label>
+          <select id="f_paid"><option value="false">Chưa thu</option><option value="true">Đã thu</option></select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" onclick="closeAddModal()">Hủy</button>
+        <button type="submit" class="btn-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let DATA = [];
+let currentViewingRoom = null;
+let ADMIN_PASSWORD = sessionStorage.getItem('bloom_admin_password') || '';
+
+async function api(url, options = {}, retry = true) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Password': ADMIN_PASSWORD,
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.json();
+  if (response.status === 401 && retry) {
+    const password = prompt('Nhập mật khẩu quản trị Bloom Apartment:');
+    if (password === null) throw new Error('Bạn cần đăng nhập để sử dụng hệ thống');
+    ADMIN_PASSWORD = password;
+    sessionStorage.setItem('bloom_admin_password', password);
+    return api(url, options, false);
+  }
+  if (!response.ok) throw new Error(body.error || 'Không thể kết nối máy chủ');
+  return body;
+}
+
+async function loadData() {
+  try {
+    DATA = await api('/api/bills?period=2026-09');
+    refreshUI();
+  } catch (error) {
+    alert(`Không tải được dữ liệu: ${error.message}`);
+  }
+}
+
+const n = v => Number(v) || 0;
+const fmt = v => n(v).toLocaleString('vi-VN');
+const money = v => fmt(v) + ' ₫';
+
+function refreshUI() {
+  const totalRooms = DATA.length;
+  const occRooms = DATA.filter(x => n(x.rent) > 0).length;
+  const totalRev = DATA.reduce((s, x) => s + n(x.payable), 0);
+  const paidRev = DATA.filter(x => x.paid).reduce((s, x) => s + n(x.payable), 0);
+  const unpaidRev = totalRev - paidRev;
+
+  document.getElementById('rooms').textContent = totalRooms;
+  document.getElementById('roomsSub').textContent = `${totalRooms} phòng`;
+  document.getElementById('occ').textContent = occRooms;
+  document.getElementById('rev').textContent = money(totalRev);
+  document.getElementById('paid').textContent = money(paidRev);
+  document.getElementById('paidRatio').textContent = totalRev > 0 ? `${Math.round(paidRev / totalRev * 100)}% đã thu` : '0%';
+  document.getElementById('debt').textContent = money(unpaidRev);
+
+  const max = Math.max(...DATA.map(x => n(x.payable)), 1);
+  document.getElementById('chart').innerHTML = DATA.map(x => `
+    <div class="bw">
+      <div class="bar" style="height:${Math.max(4, n(x.payable) / max * 170)}px; background:${x.paid ? 'var(--o)' : '#d9a74a'}" title="${x.room}: ${money(x.payable)}"></div>
+      <small>${x.room}</small>
+    </div>
+  `).join('');
+
+  document.getElementById('roomGrid').innerHTML = DATA.map(x => `
+    <div class="room ${n(x.rent) > 0 ? 'occ' : 'empty'}" onclick="openBill('${x.room}')">
+      <span class="room-badge ${x.paid ? 'paid' : 'unpaid'}"></span>
+      <b>${x.room}</b>
+      <small>${n(x.rent) > 0 ? 'ĐANG THUÊ' : 'TRỐNG'}</small>
+    </div>
+  `).join('');
+
+  renderTable();
+}
+
+async function togglePayment(room, e) {
+  if (e) e.stopPropagation();
+  const target = DATA.find(x => x.room === room);
+  if (!target) return;
+  try {
+    await api(`/api/bills?id=${target.id}`, { method: 'PATCH', body: JSON.stringify({ paid: !target.paid }) });
+    target.paid = !target.paid;
+    refreshUI();
+    if (currentViewingRoom === room) openBill(room);
+  } catch (error) { alert(error.message); }
+}
+
+function renderTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const rows = DATA.filter(x => x.room.toLowerCase().includes(q));
+  document.getElementById('tbody').innerHTML = rows.map(x => `
+    <tr>
+      <td><b>${x.room}</b></td>
+      <td>${fmt(x.rent)}</td>
+      <td>${fmt(x.service)}</td>
+      <td>${x.start}</td>
+      <td>${x.end}</td>
+      <td>${x.usage}</td>
+      <td>${fmt(x.electric)}</td>
+      <td>${fmt(x.debt)}</td>
+      <td><b>${fmt(x.payable)}</b></td>
+      <td>
+        <span class="badge ${x.paid ? '' : 'unpaid'}" onclick="togglePayment('${x.room}', event)">
+          ${x.paid ? '✓ Đã thu' : '⏳ Chưa thu'}
+        </span>
+      </td>
+      <td>
+        <button onclick="openBill('${x.room}')">Xem Bill</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Mở Bill và tạo mã VietQR theo mẫu ảnh
+function openBill(room) {
+  const x = DATA.find(a => a.room === room);
+  if (!x) return;
+  currentViewingRoom = room;
+
+  document.getElementById('billRoom').textContent = x.room;
+  document.getElementById('billMonth').textContent = '09/2026';
+  document.getElementById('bRent').textContent = fmt(x.rent);
+  document.getElementById('bService').textContent = fmt(x.service);
+  document.getElementById('bStart').textContent = x.start;
+  document.getElementById('bEnd').textContent = x.end;
+  document.getElementById('bUsage').textContent = x.usage;
+  document.getElementById('bElectric').textContent = fmt(x.electric);
+  document.getElementById('bDebt').textContent = fmt(x.debt);
+  document.getElementById('bPayable').textContent = `${fmt(x.payable)} VNĐ`;
+
+  // Tạo URL VietQR tự động theo số tài khoản Techcombank: 6868684307
+  const transferDesc = encodeURIComponent(`Phong ${x.room} Bloom 09-2026`);
+  const qrUrl = `https://img.vietqr.io/image/970407-6868684307-compact2.png?amount=${x.payable}&addInfo=${transferDesc}&accountName=HO%20THI%20DIEU%20HIEN`;
+  document.getElementById('billQrImg').src = qrUrl;
+
+  // Cập nhật nút trạng thái
+  const btn = document.getElementById('toggleStatusBtn');
+  btn.textContent = x.paid ? 'Đánh dấu: Chưa thu' : 'Đánh dấu: Đã thu';
+  btn.style.background = x.paid ? '#c94a29' : 'var(--o)';
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function toggleCurrentBillStatus() {
+  if (currentViewingRoom) togglePayment(currentViewingRoom);
+}
+
+function closeBill() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// Tải hóa đơn thành file PNG chuẩn chất lượng cao
+function downloadInvoicePNG() {
+  const invoiceElement = document.getElementById('invoiceCard');
+  const roomName = document.getElementById('billRoom').textContent;
+
+  html2canvas(invoiceElement, {
+    scale: 2, // Tăng gấp đôi độ sắc nét của ảnh
+    useCORS: true, // Hỗ trợ load mã QR từ URL ngoài
+    backgroundColor: null
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `HoaDon_Phong_${roomName}_09-2026.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+function openAddModal() {
+  document.getElementById('addRoomForm').reset();
+  document.getElementById('addModal').classList.add('open');
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+async function handleSaveRoom(e) {
+  e.preventDefault();
+  const room = document.getElementById('f_room').value.trim();
+  const rent = n(document.getElementById('f_rent').value);
+  const service = n(document.getElementById('f_service').value);
+  const debt = n(document.getElementById('f_debt').value);
+  const start = n(document.getElementById('f_start').value);
+  const end = n(document.getElementById('f_end').value);
+  const rate = n(document.getElementById('f_rate').value) || 4000;
+  const paid = document.getElementById('f_paid').value === 'true';
+
+  if (end < start) return alert('Điện cuối không được nhỏ hơn điện đầu');
+  try {
+    await api('/api/bills', {
+      method: 'POST',
+      body: JSON.stringify({ period: '2026-09', room, rent, service, debt, start, end, rate, paid })
+    });
+    await loadData();
+    closeAddModal();
+  } catch (error) { alert(error.message); }
+}
+
+loadData();
+</script>
+</body>
+</html>
