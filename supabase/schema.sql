@@ -4,12 +4,16 @@ create or replace function public.set_updated_at() returns trigger language plpg
 
 create table if not exists public.properties(id uuid primary key default gen_random_uuid(),name text not null unique,address text,phone text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
 alter table public.properties add column if not exists short_name text;
+alter table public.properties add column if not exists property_code text;
 alter table public.properties add column if not exists owner_name text;
 alter table public.properties add column if not exists owner_phone text;
 alter table public.properties add column if not exists email text;
 alter table public.properties add column if not exists tax_code text;
 alter table public.properties add column if not exists total_floors int not null default 4;
 alter table public.properties add column if not exists notes text;
+update public.properties set property_code='BLM-'||upper(substr(replace(id::text,'-',''),1,6)) where property_code is null or btrim(property_code)='';
+alter table public.properties alter column property_code set not null;
+create unique index if not exists properties_code_uidx on public.properties(property_code);
 create table if not exists public.property_settings(id uuid primary key default gen_random_uuid(),property_id uuid not null unique references public.properties(id) on delete cascade,electric_rate numeric(12,2) not null default 4000,water_rate numeric(12,2) not null default 0,default_service_fee numeric(14,2) not null default 0,billing_close_day int not null default 28 check(billing_close_day between 1 and 28),payment_due_day int not null default 5 check(payment_due_day between 1 and 28),bank_name text,bank_account text,bank_account_name text,qr_template text default 'compact2',invoice_note text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
 create table if not exists public.rooms(id uuid primary key default gen_random_uuid(),property_id uuid not null references public.properties(id),room_number text not null,floor int,area numeric(8,2),base_rent numeric(14,2) not null default 0,status text not null default 'vacant' check(status in('vacant','occupied','maintenance','reserved')),notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(property_id,room_number));
 create table if not exists public.tenants(id uuid primary key default gen_random_uuid(),full_name text not null,phone text,email text,nationality text not null default 'Việt Nam',identity_type text default 'CCCD',identity_number text,date_of_birth date,permanent_address text,emergency_contact text,notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
@@ -26,6 +30,6 @@ create index if not exists rooms_status_idx on public.rooms(status); create inde
 do $$ declare t text; begin foreach t in array array['properties','property_settings','rooms','tenants','leases','tenant_visas','billing_periods','monthly_room_records','invoices'] loop execute format('drop trigger if exists set_%I_updated_at on public.%I',t,t); execute format('create trigger set_%I_updated_at before update on public.%I for each row execute function public.set_updated_at()',t,t); end loop; end $$;
 do $$ declare t text; begin foreach t in array array['properties','property_settings','rooms','tenants','leases','lease_tenants','tenant_visas','billing_periods','monthly_room_records','invoices','payments','audit_logs'] loop execute format('alter table public.%I enable row level security',t); end loop; end $$;
 
-insert into public.properties(name,address) values('Bloom Apartment','Đà Nẵng') on conflict(name) do nothing;
+insert into public.properties(name,property_code,address) values('Bloom Apartment','BLOOM','Đà Nẵng') on conflict(name) do update set property_code=coalesce(public.properties.property_code,excluded.property_code);
 insert into public.property_settings(property_id) select id from public.properties where name='Bloom Apartment' on conflict(property_id) do nothing;
 insert into public.rooms(property_id,room_number,floor,status) select p.id,v.room,left(v.room,1)::int,'vacant' from public.properties p cross join(values('101'),('102'),('103'),('104'),('105'),('201'),('202'),('203'),('204'),('205'),('301'),('302'),('303'),('304'),('305'),('401'),('402'),('403'),('404'),('405'))v(room) where p.name='Bloom Apartment' on conflict(property_id,room_number) do nothing;
