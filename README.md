@@ -10,6 +10,8 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 - Quản lý phòng, khách thuê, hợp đồng và lịch sử.
 - Nhập điện, nước, dịch vụ, nợ cũ theo từng tháng.
 - Phát hành hóa đơn, thanh toán một phần hoặc toàn bộ.
+- Kỳ thanh toán được khóa sau khi phát hành hóa đơn; dữ liệu tháng đã có hóa đơn không thể sửa.
+- Thanh toán được ghi nhận trong transaction database, có chống ghi trùng request và không cho vượt công nợ.
 - Xem và tải hóa đơn PNG theo thiết kế Bloom, có VietQR và tài khoản riêng của từng tòa nhà.
 - Cảnh báo hợp đồng/visa theo thời gian còn lại.
 - Giao diện responsive cho máy tính và điện thoại.
@@ -18,6 +20,8 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 ## Cài database
 
 Mở Supabase → SQL Editor, chạy toàn bộ `supabase/schema.sql`. Tệp tạo cấu trúc mới và 20 phòng từ 101 đến 405. Bảng `room_bills` cũ không bị xóa nên dữ liệu trước đây vẫn an toàn để đối chiếu.
+
+Tệp schema có thể chạy lại trên database đã tồn tại. Phiên bản hiện tại bổ sung mã hóa đơn theo tòa nhà, trạng thái khóa kỳ, thông tin hủy hóa đơn, khóa chống ghi trùng thanh toán và hàm transaction `record_payment`.
 
 ## Liên kết dữ liệu
 
@@ -51,5 +55,7 @@ VIEWER_PASSWORD=...
 1. Thêm khách thuê.
 2. Tạo hợp đồng, chọn phòng và người đại diện.
 3. Cuối tháng nhập chỉ số và chi phí từng phòng.
-4. Phát hành hóa đơn theo kỳ.
+4. Kiểm tra dữ liệu tháng rồi phát hành hóa đơn theo kỳ. Sau bước này kỳ sẽ tự khóa.
 5. Ghi nhận từng lần thanh toán; trạng thái tự đổi thành chưa thu, thu một phần hoặc đã thu.
+
+Không sửa trực tiếp dữ liệu tháng sau khi đã phát hành hóa đơn. Nếu phát hiện sai, cần bổ sung quy trình hóa đơn điều chỉnh/hủy ở phiên bản tiếp theo để giữ nguyên lịch sử giao dịch.

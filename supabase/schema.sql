@@ -21,10 +21,13 @@ create table if not exists public.tenants(id uuid primary key default gen_random
 create table if not exists public.leases(id uuid primary key default gen_random_uuid(),room_id uuid not null references public.rooms(id),representative_tenant_id uuid references public.tenants(id),start_date date not null,end_date date not null,monthly_rent numeric(14,2) not null default 0,deposit_amount numeric(14,2) not null default 0,payment_due_day int not null default 5 check(payment_due_day between 1 and 28),status text not null default 'active' check(status in('draft','active','expired','terminated')),ended_at date,end_reason text,deposit_refunded numeric(14,2) not null default 0,notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),check(end_date>=start_date));
 create table if not exists public.lease_tenants(lease_id uuid not null references public.leases(id) on delete cascade,tenant_id uuid not null references public.tenants(id),is_representative boolean not null default false,move_in_date date,move_out_date date,primary key(lease_id,tenant_id));
 create table if not exists public.tenant_visas(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references public.tenants(id) on delete cascade,visa_number text,visa_type text,issued_date date,expiry_date date not null,issuing_country text,document_url text,status text not null default 'active' check(status in('active','renewed','expired','cancelled')),notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
-create table if not exists public.billing_periods(id uuid primary key default gen_random_uuid(),property_id uuid not null references public.properties(id),period text not null check(period ~ '^\d{4}-(0[1-9]|1[0-2])$'),status text not null default 'open' check(status in('open','locked')),due_date date,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(property_id,period));
+create table if not exists public.billing_periods(id uuid primary key default gen_random_uuid(),property_id uuid not null references public.properties(id),period text not null check(period ~ '^\d{4}-(0[1-9]|1[0-2])$'),status text not null default 'open' check(status in('open','locked')),due_date date,closed_at timestamptz,closed_by text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(property_id,period));
+alter table public.billing_periods add column if not exists closed_at timestamptz;
+alter table public.billing_periods add column if not exists closed_by text;
 create table if not exists public.monthly_room_records(id uuid primary key default gen_random_uuid(),billing_period_id uuid not null references public.billing_periods(id) on delete cascade,room_id uuid not null references public.rooms(id),lease_id uuid references public.leases(id),rent numeric(14,2) not null default 0,electric_start numeric(12,2) not null default 0,electric_end numeric(12,2) not null default 0,electric_rate numeric(12,2) not null default 4000,water_start numeric(12,2) not null default 0,water_end numeric(12,2) not null default 0,water_rate numeric(12,2) not null default 0,service_fee numeric(14,2) not null default 0,other_fee numeric(14,2) not null default 0,discount numeric(14,2) not null default 0,previous_debt numeric(14,2) not null default 0,notes text,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(billing_period_id,room_id),check(electric_end>=electric_start),check(water_end>=water_start));
 create table if not exists public.invoices(id uuid primary key default gen_random_uuid(),record_id uuid not null unique references public.monthly_room_records(id),invoice_number text unique,issued_at timestamptz not null default now(),due_date date,total_amount numeric(14,2) not null default 0,paid_amount numeric(14,2) not null default 0,status text not null default 'unpaid' check(status in('draft','unpaid','partial','paid','overdue','cancelled')),created_at timestamptz not null default now(),updated_at timestamptz not null default now());
-create table if not exists public.payments(id uuid primary key default gen_random_uuid(),invoice_id uuid not null references public.invoices(id),amount numeric(14,2) not null check(amount>0),paid_at timestamptz not null default now(),method text not null default 'transfer' check(method in('cash','transfer','other')),reference text,notes text,created_at timestamptz not null default now());
+create table if not exists public.payments(id uuid primary key default gen_random_uuid(),invoice_id uuid not null references public.invoices(id),amount numeric(14,2) not null check(amount>0),paid_at timestamptz not null default now(),method text not null default 'transfer' check(method in('cash','transfer','other')),reference text,notes text,idempotency_key text,created_at timestamptz not null default now());
+alter table public.payments add column if not exists idempotency_key text;
 create table if not exists public.audit_logs(id bigint generated always as identity primary key,action text not null,entity_type text not null,entity_id text,details jsonb,created_at timestamptz not null default now());
 
 create index if not exists rooms_status_idx on public.rooms(status); create index if not exists leases_end_date_idx on public.leases(end_date); create index if not exists visas_expiry_idx on public.tenant_visas(expiry_date); create index if not exists records_period_idx on public.monthly_room_records(billing_period_id); create index if not exists payments_invoice_idx on public.payments(invoice_id);
@@ -53,6 +56,20 @@ alter table public.leases alter column property_id set not null;
 alter table public.lease_tenants alter column property_id set not null;
 alter table public.tenant_visas alter column property_id set not null;
 alter table public.monthly_room_records alter column property_id set not null;
+
+-- Hóa đơn phải thuộc một tòa nhà để mã hóa đơn không bị trùng giữa các tòa nhà.
+alter table public.invoices add column if not exists property_id uuid references public.properties(id) on delete restrict;
+alter table public.invoices add column if not exists locked_at timestamptz;
+alter table public.invoices add column if not exists cancelled_at timestamptz;
+alter table public.invoices add column if not exists cancel_reason text;
+update public.invoices i set property_id=m.property_id from public.monthly_room_records m where m.id=i.record_id and i.property_id is null;
+alter table public.invoices alter column property_id set not null;
+do $$ begin
+  alter table public.invoices add constraint invoices_property_fk foreign key(property_id) references public.properties(id) on delete restrict;
+exception when duplicate_object then null; end $$;
+alter table public.invoices drop constraint if exists invoices_invoice_number_key;
+create unique index if not exists invoices_property_number_uidx on public.invoices(property_id,invoice_number) where invoice_number is not null;
+create unique index if not exists payments_idempotency_uidx on public.payments(idempotency_key) where idempotency_key is not null;
 
 create unique index if not exists rooms_id_property_uidx on public.rooms(id,property_id);
 create unique index if not exists tenants_id_property_uidx on public.tenants(id,property_id);
@@ -88,3 +105,47 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 do $$ begin alter table public.rooms add constraint rooms_base_rent_nonnegative check(base_rent>=0); exception when duplicate_object then null; end $$;
 do $$ begin alter table public.leases add constraint leases_money_nonnegative check(monthly_rent>=0 and deposit_amount>=0 and deposit_refunded>=0); exception when duplicate_object then null; end $$;
+
+-- Ghi nhận thanh toán trong một transaction, tránh mất dữ liệu khi có hai lần thu đồng thời.
+create or replace function public.record_payment(
+  p_invoice_id uuid,
+  p_amount numeric,
+  p_paid_at timestamptz default now(),
+  p_method text default 'transfer',
+  p_reference text default null,
+  p_notes text default null,
+  p_idempotency_key text default null
+) returns jsonb language plpgsql security definer set search_path=public as $$
+declare
+  v_invoice public.invoices%rowtype;
+  v_payment public.payments%rowtype;
+  v_existing public.payments%rowtype;
+  v_remaining numeric;
+begin
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'Số tiền thanh toán không hợp lệ';
+  end if;
+  if p_method not in ('cash','transfer','other') then
+    raise exception 'Phương thức thanh toán không hợp lệ';
+  end if;
+  if p_idempotency_key is not null then
+    select * into v_existing from public.payments where idempotency_key=p_idempotency_key limit 1;
+    if found then return to_jsonb(v_existing); end if;
+  end if;
+  select * into v_invoice from public.invoices where id=p_invoice_id for update;
+  if not found then raise exception 'Không tìm thấy hóa đơn'; end if;
+  if v_invoice.status='cancelled' then raise exception 'Hóa đơn đã bị hủy'; end if;
+  v_remaining:=v_invoice.total_amount-v_invoice.paid_amount;
+  if p_amount>v_remaining then raise exception 'Số tiền vượt quá công nợ còn lại'; end if;
+  insert into public.payments(invoice_id,amount,paid_at,method,reference,notes,idempotency_key)
+  values(p_invoice_id,p_amount,coalesce(p_paid_at,now()),p_method,p_reference,p_notes,p_idempotency_key)
+  returning * into v_payment;
+  update public.invoices
+  set paid_amount=paid_amount+p_amount,
+      status=case when paid_amount+p_amount>=total_amount then 'paid' else 'partial' end,
+      locked_at=coalesce(locked_at,now())
+  where id=p_invoice_id;
+  return to_jsonb(v_payment);
+end $$;
+revoke all on function public.record_payment(uuid,numeric,timestamptz,text,text,text,text) from public;
+grant execute on function public.record_payment(uuid,numeric,timestamptz,text,text,text,text) to service_role;
