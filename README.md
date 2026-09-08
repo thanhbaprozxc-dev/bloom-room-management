@@ -10,7 +10,7 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 - Quản lý phòng, khách thuê, hợp đồng và lịch sử.
 - Nhập điện, nước, dịch vụ, nợ cũ theo từng tháng.
 - Phát hành hóa đơn, thanh toán một phần hoặc toàn bộ.
-- Kỳ thanh toán được khóa sau khi phát hành hóa đơn; dữ liệu tháng đã có hóa đơn không thể sửa.
+- Phát hành hóa đơn không khóa kỳ; dữ liệu từng phòng vẫn sửa được khi hóa đơn chưa có thanh toán. Phòng sẽ tự khóa sau khi ghi nhận khoản thu đầu tiên.
 - Thanh toán được ghi nhận trong transaction database, có chống ghi trùng request và không cho vượt công nợ.
 - Xem và tải hóa đơn PNG theo thiết kế Bloom, có VietQR và tài khoản riêng của từng tòa nhà.
 - Cảnh báo hợp đồng/visa theo thời gian còn lại.
@@ -55,7 +55,7 @@ VIEWER_PASSWORD=...
 1. Thêm khách thuê.
 2. Tạo hợp đồng, chọn phòng và người đại diện.
 3. Cuối tháng nhập chỉ số và chi phí từng phòng.
-4. Kiểm tra dữ liệu tháng rồi phát hành hóa đơn theo kỳ. Sau bước này kỳ sẽ tự khóa.
-5. Ghi nhận từng lần thanh toán; trạng thái tự đổi thành chưa thu, thu một phần hoặc đã thu.
+4. Kiểm tra dữ liệu tháng rồi phát hành hóa đơn theo kỳ và gửi khách kiểm tra. Khi chưa có thanh toán, dữ liệu vẫn có thể sửa và phát hành lại.
+5. Ghi nhận từng lần thanh toán; phòng có khoản thu sẽ tự khóa, trạng thái hóa đơn tự đổi thành chưa thu, thu một phần hoặc đã thu.
 
-Không sửa trực tiếp dữ liệu tháng sau khi đã phát hành hóa đơn. Nếu phát hiện sai, cần bổ sung quy trình hóa đơn điều chỉnh/hủy ở phiên bản tiếp theo để giữ nguyên lịch sử giao dịch.
+Sau khi phòng đã có thanh toán, không sửa trực tiếp dữ liệu tháng của phòng đó. Nếu phát hiện sai sau thanh toán, cần dùng quy trình hóa đơn điều chỉnh/hủy để giữ nguyên lịch sử giao dịch.
