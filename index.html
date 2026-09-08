@@ -130,3 +130,4 @@ const mobileLoadBase=load;load=async function(name){const result=await mobileLoa
 mobileRenderDrawer();document.querySelector('#mobileMenuToggle')?.addEventListener('click',mobileOpenDrawer);document.querySelector('#mobileMenuClose')?.addEventListener('click',mobileCloseDrawer);document.querySelector('#mobileOverlay')?.addEventListener('click',mobileCloseDrawer);document.addEventListener('keydown',event=>{if(event.key==='Escape')mobileCloseDrawer()});document.addEventListener('click',event=>{if(event.target.closest('#mobileDrawer [data-go]'))mobileCloseDrawer()});document.addEventListener('input',event=>{if(event.target.matches('[data-search]'))requestAnimationFrame(mobileSync)});setTimeout(mobileSync,0);
 
 </script>
+
