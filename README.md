@@ -60,3 +60,4 @@ VIEWER_PASSWORD=...
 5. Ghi nhận từng lần thanh toán; phòng có khoản thu sẽ tự khóa, trạng thái hóa đơn tự đổi thành chưa thu, thu một phần hoặc đã thu.
 
 Sau khi phòng đã có thanh toán, không sửa trực tiếp dữ liệu tháng của phòng đó. Nếu phát hiện sai sau thanh toán, cần dùng quy trình hóa đơn điều chỉnh/hủy để giữ nguyên lịch sử giao dịch.
+
