@@ -14,6 +14,7 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 - Thanh toán được ghi nhận trong transaction database, có chống ghi trùng request và không cho vượt công nợ.
 - Xem và tải hóa đơn PNG theo thiết kế Bloom, có VietQR và tài khoản riêng của từng tòa nhà.
 - Cảnh báo hợp đồng/visa theo thời gian còn lại.
+- Báo cáo theo tòa nhà, tháng/năm và hai chế độ: theo kỳ hóa đơn hoặc theo dòng tiền thực nhận; có KPI, cơ cấu phải thu, chi tiết theo phòng, xu hướng 6 tháng và xuất CSV UTF-8.
 - Giao diện responsive cho máy tính và điện thoại.
 - Mật khẩu quản trị, tài khoản chỉ xem và nhật ký thay đổi.
 
