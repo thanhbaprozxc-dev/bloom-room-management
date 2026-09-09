@@ -1,3 +1,6 @@
+-- LEGACY IMPORT: chỉ dùng để nhập dữ liệu lịch sử/khởi tạo một lần.
+-- Không dùng file này để tạo phí dịch vụ + nước cho hợp đồng mới.
+-- Phí dịch vụ + nước chuẩn phải được nhập tại leases.service_water_fee.
 -- Nhập dữ liệu điện, tiền phòng, phí dịch vụ và nợ trước
 -- cho Bloom Apartment - kỳ 2026-09.
 -- Nếu dữ liệu thuộc kỳ khác, chỉ cần đổi giá trị v_period bên dưới.
@@ -150,3 +153,4 @@ join public.billing_periods b on b.id = m.billing_period_id
 where p.name = 'Bloom Apartment'
   and b.period = '2026-09'
 order by r.room_number::int;
+
