@@ -152,8 +152,9 @@
 
     .flower-visual { position: relative; width: min(46vw, 390px); aspect-ratio: 1; margin: 8px 0 2px; }
     .flower-visual svg { display: block; width: 100%; height: 100%; overflow: visible; }
-    .petal { opacity: 0; transform: scale(.45); transform-box: fill-box; transform-origin: center; }
-    .is-open .petal { animation: open-petal 1s var(--delay) var(--ease) forwards; }
+    .petal { opacity: 0; transform: rotate(var(--angle)) translateY(0) scale(.05); transform-box: view-box; transform-origin: 200px 200px; }
+    .is-open .petal { animation: radiate-petal 1.1s var(--delay) var(--ease) forwards; }
+    .is-open .petal ellipse { animation: petal-warm 1.45s calc(var(--delay) + .22s) var(--ease) forwards; }
     .petal ellipse { fill: var(--petal); }
     .petal:nth-child(3n) ellipse { fill: var(--petal-light); }
     .petal:nth-child(2n) ellipse { fill: #b1ca76; }
@@ -177,7 +178,8 @@
     .concept.is-active { display: grid; }
 
     @keyframes reveal-word { to { opacity: 1; transform: translateY(0); } }
-    @keyframes open-petal { 0% { opacity: 0; transform: scale(.45) rotate(-10deg); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+    @keyframes radiate-petal { 0% { opacity: 0; transform: rotate(var(--angle)) translateY(0) scale(.05); } 22% { opacity: 1; } 100% { opacity: 1; transform: rotate(var(--angle)) translateY(-108px) scale(1); } }
+    @keyframes petal-warm { 0%, 55% { fill: var(--petal); } 100% { fill: #d7ae51; } }
     @keyframes seed-in { to { opacity: 1; transform: scale(1); } }
     @keyframes ring-in { to { opacity: 1; transform: scale(1); } }
     @keyframes draw-stem { to { opacity: .75; stroke-dashoffset: 0; } }
@@ -202,8 +204,10 @@
       .preview-label { font-size: 10px; }
     }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      *, *::before { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
       .experience, .brand-lockup span, .tagline, .cta, .petal, .flower-center, .flower-ring, .stem, .garden-line, .garden-leaf, .garden-dot { opacity: 1; transform: none; stroke-dashoffset: 0; }
+      .petal { transform: rotate(var(--angle)) translateY(-108px) scale(1); }
+      .petal ellipse { fill: #d7ae51; }
       .floating-petal { animation: none; }
     }
   </style>
@@ -232,14 +236,14 @@
           <svg viewBox="0 0 400 400" role="img" aria-label="Bông hoa abstract đang nở">
             <circle class="flower-ring" cx="200" cy="200" r="150" />
             <path class="stem" d="M200 288 C205 330 195 358 173 384 M199 342 C225 329 247 330 265 344" />
-            <g class="petal" style="--delay:.22s" transform="rotate(0 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.28s" transform="rotate(45 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.34s" transform="rotate(90 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.40s" transform="rotate(135 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.46s" transform="rotate(180 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.52s" transform="rotate(225 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.58s" transform="rotate(270 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
-            <g class="petal" style="--delay:.64s" transform="rotate(315 200 200)"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal seed-petal" style="--angle:0deg;--delay:.12s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:45deg;--delay:.28s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:90deg;--delay:.34s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:135deg;--delay:.40s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:180deg;--delay:.46s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:225deg;--delay:.52s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:270deg;--delay:.58s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
+            <g class="petal" style="--angle:315deg;--delay:.64s"><ellipse cx="200" cy="92" rx="26" ry="79" /></g>
             <circle class="flower-center" cx="200" cy="200" r="27" />
             <circle class="flower-center" cx="188" cy="190" r="4" fill="#f7ead2" />
             <circle class="flower-center" cx="211" cy="206" r="4" fill="#f7ead2" />
