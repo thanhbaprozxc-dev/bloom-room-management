@@ -26,11 +26,11 @@ function reportStatus(paid,total){if(paid<=0)return'unpaid';if(paid<total)return
 function reportMethod(method){return method==='transfer'?'Chuyển khoản':method==='cash'?'Tiền mặt':method==='other'?'Khác':method||'—'}
 function listFilter(field,values){const items=[...new Set(values.map(x=>String(x??'').trim()).filter(Boolean))];if(!items.length)return'';if(items.length===1)return`${field}=eq.${encodeURIComponent(items[0])}`;return`${field}=in.(${items.map(x=>encodeURIComponent(x)).join(',')})`}
 async function buildReport(propertyId,period,mode='invoice'){
- const propertyIdEncoded=encodeURIComponent(propertyId),property=(await db(`properties?id=${propertyIdEncoded}&select=id,name,property_code`))[0];
+ const propertyIdEncoded=encodeURIComponent(propertyId),property=(await db(`properties?id=eq.${propertyIdEncoded}&select=id,name,property_code`))[0];
  if(!property)throw Object.assign(new Error('Không tìm thấy tòa nhà'),{status:404});
  const [rooms,leases]=await Promise.all([
-  db(`rooms?property_id=${propertyIdEncoded}&select=id,room_number,status`),
-  db(`leases?property_id=${propertyIdEncoded}&select=id,room_id,representative_tenant_id,start_date,end_date,status`)
+  db(`rooms?property_id=eq.${propertyIdEncoded}&select=id,room_number,status`),
+  db(`leases?property_id=eq.${propertyIdEncoded}&select=id,room_id,representative_tenant_id,start_date,end_date,status`)
  ]);
  const occupiedRoomIds=new Set(leases.filter(leaseIsCurrent).map(x=>x.room_id));
  let invoices=[],records=[],selectedPayments=[];
@@ -38,21 +38,21 @@ async function buildReport(propertyId,period,mode='invoice'){
   const bounds=reportBounds(period);
   selectedPayments=await db(`payments?paid_at=gte.${encodeURIComponent(bounds.start)}&paid_at=lt.${encodeURIComponent(bounds.end)}&select=id,invoice_id,amount,paid_at,method&order=paid_at.desc`);
   const selectedInvoiceIds=[...new Set(selectedPayments.map(x=>x.invoice_id).filter(Boolean))];
-  invoices=selectedInvoiceIds.length?await db(`invoices?property_id=${propertyIdEncoded}&${listFilter('id',selectedInvoiceIds)}&status=neq.cancelled&select=id,record_id,total_amount,status`):[];
+  invoices=selectedInvoiceIds.length?await db(`invoices?property_id=eq.${propertyIdEncoded}&${listFilter('id',selectedInvoiceIds)}&status=neq.cancelled&select=id,record_id,total_amount,status`):[];
   const recordIds=invoices.map(x=>x.record_id).filter(Boolean);
-  records=recordIds.length?await db(`monthly_room_records?property_id=${propertyIdEncoded}&${listFilter('id',recordIds)}&select=*`):[];
+  records=recordIds.length?await db(`monthly_room_records?property_id=eq.${propertyIdEncoded}&${listFilter('id',recordIds)}&select=*`):[];
  }else{
-  const periods=await db(`billing_periods?property_id=${propertyIdEncoded}&period=eq.${encodeURIComponent(period)}&select=id,period`),periodId=periods[0]?.id;
+  const periods=await db(`billing_periods?property_id=eq.${propertyIdEncoded}&period=eq.${encodeURIComponent(period)}&select=id,period`),periodId=periods[0]?.id;
   if(periodId){
-   records=await db(`monthly_room_records?property_id=${propertyIdEncoded}&billing_period_id=eq.${encodeURIComponent(periodId)}&select=*`);
+   records=await db(`monthly_room_records?property_id=eq.${propertyIdEncoded}&billing_period_id=eq.${encodeURIComponent(periodId)}&select=*`);
    const recordIds=records.map(x=>x.id);
-   invoices=recordIds.length?await db(`invoices?property_id=${propertyIdEncoded}&${listFilter('record_id',recordIds)}&status=neq.cancelled&select=id,record_id,total_amount,status`):[];
+   invoices=recordIds.length?await db(`invoices?property_id=eq.${propertyIdEncoded}&${listFilter('record_id',recordIds)}&status=neq.cancelled&select=id,record_id,total_amount,status`):[];
   }
  }
  const invoiceIds=invoices.map(x=>x.id),recordById=Object.fromEntries(records.map(x=>[x.id,x])),allPayments=invoiceIds.length?await db(`payments?${listFilter('invoice_id',invoiceIds)}&select=id,invoice_id,amount,paid_at,method&order=paid_at.desc`):[],paymentsByInvoice={};
  for(const payment of allPayments)(paymentsByInvoice[payment.invoice_id]??=[]).push(payment);
  const selectedByInvoice={};for(const payment of selectedPayments)(selectedByInvoice[payment.invoice_id]??=[]).push(payment);
- const recordPeriodIds=[...new Set(records.map(x=>x.billing_period_id).filter(Boolean))],periods=recordPeriodIds.length?await db(`billing_periods?property_id=${propertyIdEncoded}&${listFilter('id',recordPeriodIds)}&select=id,period`):[],periodById=Object.fromEntries(periods.map(x=>[x.id,x.period]));
+ const recordPeriodIds=[...new Set(records.map(x=>x.billing_period_id).filter(Boolean))],periods=recordPeriodIds.length?await db(`billing_periods?property_id=eq.${propertyIdEncoded}&${listFilter('id',recordPeriodIds)}&select=id,period`):[],periodById=Object.fromEntries(periods.map(x=>[x.id,x.period]));
  // Báo cáo chỉ lấy người đại diện của hợp đồng đang có hiệu lực hiện tại.
  // Không dùng lease_id lịch sử trong monthly_room_records để xác định khách thuê.
  const activeLeaseByRoom={};
@@ -62,7 +62,7 @@ async function buildReport(propertyId,period,mode='invoice'){
  }
  const reportRoomIds=new Set(records.map(x=>x.room_id).filter(Boolean));
  const tenantIds=[...new Set(Object.values(activeLeaseByRoom).filter(x=>reportRoomIds.has(x.room_id)).map(x=>x.representative_tenant_id).filter(Boolean))];
- const tenants=tenantIds.length?await db(`tenants?property_id=${propertyIdEncoded}&${listFilter('id',tenantIds)}&select=id,full_name`):[];
+ const tenants=tenantIds.length?await db(`tenants?property_id=eq.${propertyIdEncoded}&${listFilter('id',tenantIds)}&select=id,full_name`):[];
  const tenantById=Object.fromEntries(tenants.map(x=>[x.id,x])),roomById=Object.fromEntries(rooms.map(x=>[x.id,x]));
  const rows=invoices.map(invoice=>{
   const record=recordById[invoice.record_id];if(!record)return null;
