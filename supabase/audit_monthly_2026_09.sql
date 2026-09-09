@@ -44,7 +44,9 @@ select
   al.service_water_fee as active_lease_service_water_fee,
   i.id as invoice_id,
   i.status as invoice_status,
+  i.paid_amount as invoice_paid_amount,
   coalesce(pt.payment_total, 0) as payment_total,
+  greatest(coalesce(pt.payment_total, 0), coalesce(i.paid_amount, 0)) as paid_amount,
   case
     when m.id is null then 'NO_MONTHLY_RECORD'
     when al.id is null then 'NO_ACTIVE_LEASE'
@@ -63,7 +65,7 @@ left join active_leases al
   on al.property_id = p.id
  and al.room_id = r.id
 left join lateral (
-  select i.id, i.status
+  select i.id, i.status, i.paid_amount
   from public.invoices i
   where i.record_id = m.id
     and i.status <> 'cancelled'

@@ -38,6 +38,8 @@ candidate_rows as (
     al.active_rent,
     al.active_service_water_fee,
     i.id as invoice_id,
+    i.status as invoice_status,
+    i.paid_amount as invoice_paid_amount,
     coalesce(pt.payment_total, 0) as payment_total
   from public.monthly_room_records m
   join public.billing_periods bp on bp.id = m.billing_period_id
@@ -45,7 +47,7 @@ candidate_rows as (
   join public.rooms r on r.id = m.room_id and r.property_id = p.id
   left join active_leases al on al.property_id = p.id and al.room_id = r.id
   left join lateral (
-    select i.id
+    select i.id, i.status, i.paid_amount
     from public.invoices i
     where i.record_id = m.id
       and i.status <> 'cancelled'
@@ -65,7 +67,8 @@ select
   c.*,
   case
     when c.active_lease_id is null then 'NO_ACTIVE_LEASE'
-    when c.payment_total > 0 then 'HAS_PAYMENT_DO_NOT_TOUCH'
+    when greatest(c.payment_total, coalesce(c.invoice_paid_amount, 0)) > 0
+      or c.invoice_status in ('partial', 'paid') then 'HAS_PAYMENT_DO_NOT_TOUCH'
     when c.invoice_id is not null then 'HAS_INVOICE_NO_PAYMENT_REVIEW'
     when c.period_status = 'locked' then 'PERIOD_LOCKED_DO_NOT_TOUCH'
     when c.snapshot_lease_id is not distinct from c.active_lease_id
