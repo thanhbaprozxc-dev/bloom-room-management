@@ -69,8 +69,12 @@ select
     when c.active_lease_id is null then 'NO_ACTIVE_LEASE'
     when greatest(c.payment_total, coalesce(c.invoice_paid_amount, 0)) > 0
       or c.invoice_status in ('partial', 'paid') then 'HAS_PAYMENT_DO_NOT_TOUCH'
-    when c.invoice_id is not null then 'HAS_INVOICE_NO_PAYMENT_REVIEW'
     when c.period_status = 'locked' then 'PERIOD_LOCKED_DO_NOT_TOUCH'
+    when c.invoice_id is not null
+      and c.invoice_status not in ('partial', 'paid')
+      and coalesce(c.invoice_paid_amount, 0) = 0
+      and c.payment_total = 0 then 'SAFE_TO_RELINK_AND_SYNC_INVOICE'
+    when c.invoice_id is not null then 'HAS_INVOICE_NO_PAYMENT_REVIEW'
     when c.snapshot_lease_id is not distinct from c.active_lease_id
       and c.snapshot_rent is not distinct from c.active_rent
       and c.snapshot_service_water_fee is not distinct from c.active_service_water_fee then 'ALREADY_MATCHED'
@@ -80,7 +84,10 @@ from candidate_rows c
 order by c.property_name, c.room_number;
 
 -- SAU KHI ĐÃ XEM PREVIEW, có thể bỏ comment toàn bộ khối dưới để relink an toàn.
--- Chỉ các dòng SAFE_TO_RELINK được cập nhật; các field điện/nước/phí khác giữ nguyên.
+-- Khối này xử lý cả record chưa có hóa đơn và hóa đơn chưa thu.
+-- Với hóa đơn chưa thu, invoice.total_amount được đồng bộ trong cùng giao dịch.
+-- Tuyệt đối không cập nhật record đã thanh toán hoặc kỳ đã khóa.
+-- begin;
 -- with params as (
 --   select null::uuid as property_id, '2026-09'::text as period
 -- ),
@@ -99,25 +106,74 @@ order by c.property_name, c.room_number;
 --     and (p.property_id is null or l.property_id = p.property_id)
 --   order by l.property_id, l.room_id, l.start_date desc, l.created_at desc
 -- ),
--- safe_rows as (
---   select m.id as monthly_record_id, al.active_lease_id, al.active_rent, al.active_service_water_fee
+-- eligible_rows as (
+--   select
+--     m.id as monthly_record_id,
+--     al.active_lease_id,
+--     al.active_rent,
+--     al.active_service_water_fee,
+--     i.id as invoice_id,
+--     i.status as invoice_status,
+--     i.paid_amount as invoice_paid_amount,
+--     coalesce(pt.payment_total, 0) as payment_total
 --   from public.monthly_room_records m
 --   join public.billing_periods bp on bp.id = m.billing_period_id
 --   join active_leases al on al.property_id = bp.property_id and al.room_id = m.room_id
+--   left join lateral (
+--     select i.id, i.status, i.paid_amount
+--     from public.invoices i
+--     where i.record_id = m.id and i.status <> 'cancelled'
+--     order by i.issued_at desc
+--     limit 1
+--   ) i on true
+--   left join lateral (
+--     select coalesce(sum(pay.amount), 0)::numeric as payment_total
+--     from public.payments pay
+--     where pay.invoice_id = i.id
+--   ) pt on true
 --   cross join params prm
 --   where bp.period = prm.period
 --     and (prm.property_id is null or bp.property_id = prm.property_id)
 --     and bp.status <> 'locked'
---     and not exists (
---       select 1 from public.invoices i
---       where i.record_id = m.id and i.status <> 'cancelled'
+--     and (
+--       i.id is null
+--       or (
+--         i.status not in ('partial', 'paid')
+--         and coalesce(i.paid_amount, 0) = 0
+--         and coalesce(pt.payment_total, 0) = 0
+--       )
 --     )
+-- ),
+-- updated_records as (
+--   update public.monthly_room_records m
+--   set lease_id = e.active_lease_id,
+--       rent = e.active_rent,
+--       service_fee = e.active_service_water_fee,
+--       updated_at = now()
+--   from eligible_rows e
+--   where m.id = e.monthly_record_id
+--   returning m.id, m.rent, m.electric_start, m.electric_end, m.electric_rate,
+--             m.water_start, m.water_end, m.water_rate, m.service_fee,
+--             m.other_fee, m.previous_debt, m.discount
 -- )
--- update public.monthly_room_records m
--- set lease_id = s.active_lease_id,
---     rent = s.active_rent,
---     service_fee = s.active_service_water_fee,
+-- update public.invoices i
+-- set total_amount = greatest(
+--       0,
+--       u.rent
+--       + (u.electric_end - u.electric_start) * u.electric_rate
+--       + (u.water_end - u.water_start) * u.water_rate
+--       + u.service_fee
+--       + u.other_fee
+--       + u.previous_debt
+--       - u.discount
+--     ),
 --     updated_at = now()
--- from safe_rows s
--- where m.id = s.monthly_record_id;
+-- from updated_records u
+-- where i.record_id = u.id
+--   and i.status not in ('cancelled', 'partial', 'paid')
+--   and coalesce(i.paid_amount, 0) = 0
+--   and not exists (
+--     select 1 from public.payments p where p.invoice_id = i.id
+--   );
+-- commit;
 
