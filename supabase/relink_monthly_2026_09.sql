@@ -16,7 +16,7 @@ active_leases as (
     l.service_water_fee as active_service_water_fee
   from public.leases l
   cross join params p
-  where l.status = 'active'
+  where l.status not in ('draft', 'terminated')
     and l.start_date <= current_date
     and l.end_date >= current_date
     and (p.property_id is null or l.property_id = p.property_id)
@@ -90,7 +90,7 @@ order by c.property_name, c.room_number;
 --     l.service_water_fee as active_service_water_fee
 --   from public.leases l
 --   cross join params p
---   where l.status = 'active'
+--   where l.status not in ('draft', 'terminated')
 --     and l.start_date <= current_date
 --     and l.end_date >= current_date
 --     and (p.property_id is null or l.property_id = p.property_id)

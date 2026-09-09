@@ -21,7 +21,7 @@ active_leases as (
    and m.room_id = l.room_id
   cross join params p
   where bp.period = p.period
-    and l.status = 'active'
+    and l.status not in ('draft', 'terminated')
     and l.start_date <= current_date
     and l.end_date >= current_date
     and l.service_water_fee = 0
@@ -49,7 +49,7 @@ order by property_id, room_id;
 --     on m.billing_period_id = bp.id and m.room_id = l.room_id
 --   cross join params p
 --   where bp.period = p.period
---     and l.status = 'active'
+--     and l.status not in ('draft', 'terminated')
 --     and l.start_date <= current_date
 --     and l.end_date >= current_date
 --     and l.service_water_fee = 0

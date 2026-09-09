@@ -17,7 +17,7 @@ active_leases as (
     l.status
   from public.leases l
   cross join params p
-  where l.status = 'active'
+  where l.status not in ('draft', 'terminated')
     and l.start_date <= current_date
     and l.end_date >= current_date
     and (p.property_id is null or l.property_id = p.property_id)
