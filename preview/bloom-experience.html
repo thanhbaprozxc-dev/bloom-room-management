@@ -161,18 +161,22 @@
     .petal ellipse { fill: var(--petal); stroke: var(--petal-edge); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; paint-order: stroke fill; }
     .petal:nth-child(3n) { --petal-start: var(--petal-light); --petal-end: #ffe7a0; --petal-edge: #c28b2b; }
     .petal:nth-child(2n) { --petal-start: #e7b94d; --petal-end: #f7cf68; --petal-edge: #ab711e; }
-    .flower-center { fill: #9b682c; opacity: 0; transform: scale(.4); transform-origin: center; }
+    .sunflower-core { fill: url(#sunflower-stripes); stroke: #69461b; stroke-width: 2.5; vector-effect: non-scaling-stroke; opacity: 0; transform: scale(.4); transform-origin: center; }
+    .is-open .sunflower-core { animation: seed-in .65s .18s var(--ease) forwards; }
+    .flower-center { fill: #e8bd58; stroke: #8d5b1c; stroke-width: 1.5; opacity: 0; transform: scale(.4); transform-origin: center; }
     .is-open .flower-center { animation: seed-in .65s .18s var(--ease) forwards; }
+    .center-glint { fill: #f8eac0; opacity: 0; }
+    .is-open .center-glint { animation: seed-in .65s .28s var(--ease) forwards; }
     .flower-ring { fill: none; stroke: rgba(85,115,41,.34); stroke-width: 1.5; stroke-dasharray: 2 8; opacity: 0; transform-origin: center; }
     .is-open .flower-ring { animation: ring-in 1.4s .55s var(--ease) forwards; }
     .stem { fill: none; stroke: var(--bloom); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 320; stroke-dashoffset: 320; opacity: 0; }
     .is-open .stem { animation: draw-stem 1.2s .72s var(--ease) forwards; }
     .leaf-branch { fill: none; stroke: #6f913e; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 150; stroke-dashoffset: 150; opacity: 0; }
     .is-open .leaf-branch { animation: draw-branch .8s 1s var(--ease) forwards; }
-    .flower-leaf { opacity: 0; transform: rotate(var(--rotation)) scale(.08); transform-box: fill-box; transform-origin: center; }
-    .flower-leaf ellipse { fill: #789d45; }
-    .flower-leaf:nth-of-type(2n) ellipse { fill: #a5bf68; }
+    .flower-leaf { --leaf-start: #c9e59a; --leaf-end: #4c7d2f; opacity: 0; transform: rotate(var(--rotation)) scale(.08); transform-box: fill-box; transform-origin: center; }
+    .flower-leaf ellipse { fill: var(--leaf-start); stroke: #638d39; stroke-width: 1.8; vector-effect: non-scaling-stroke; }
     .is-open .flower-leaf { animation: leaf-grow .95s var(--delay) var(--ease) forwards; }
+    .is-open .flower-leaf ellipse { animation: leaf-warm .95s var(--delay) var(--ease) forwards; }
 
     .garden-visual { position: relative; width: min(70vw, 680px); height: min(37vw, 330px); min-height: 230px; margin: 28px 0 20px; }
     .garden-visual svg { width: 100%; height: 100%; overflow: visible; }
@@ -194,6 +198,7 @@
     @keyframes draw-stem { to { opacity: .75; stroke-dashoffset: 0; } }
     @keyframes draw-branch { to { opacity: .82; stroke-dashoffset: 0; } }
     @keyframes leaf-grow { 0% { opacity: 0; transform: rotate(var(--rotation)) scale(.08); } 30% { opacity: 1; } 100% { opacity: .96; transform: rotate(var(--rotation)) scale(1); } }
+    @keyframes leaf-warm { 0% { fill: var(--leaf-start); } 100% { fill: var(--leaf-end); } }
     @keyframes draw-line { to { opacity: 1; stroke-dashoffset: 0; } }
     @keyframes leaf-in { to { opacity: .9; transform: scale(1) rotate(0); } }
     @keyframes drift { 50% { transform: translate3d(5px,-8px,0) rotate(4deg); } }
@@ -216,11 +221,12 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-      .experience, .brand-lockup span, .tagline, .cta, .petal, .flower-center, .flower-ring, .stem, .garden-line, .garden-leaf, .garden-dot { opacity: 1; transform: none; stroke-dashoffset: 0; }
+      .experience, .brand-lockup span, .tagline, .cta, .petal, .sunflower-core, .flower-center, .center-glint, .flower-ring, .stem, .garden-line, .garden-leaf, .garden-dot { opacity: 1; transform: none; stroke-dashoffset: 0; }
       .petal { transform: rotate(var(--angle)) scale(1); }
       .petal ellipse { fill: var(--petal-end); }
       .leaf-branch { opacity: .82; stroke-dashoffset: 0; }
       .flower-leaf { opacity: .96; transform: rotate(var(--rotation)) scale(1); }
+      .flower-leaf ellipse { fill: var(--leaf-end); }
       .floating-petal { animation: none; }
     }
   </style>
@@ -247,13 +253,20 @@
         <div class="brand-lockup" aria-label="Bloom Apartment"><span class="bloom-word">BLOOM</span><span class="apartment-word">APARTMENT</span></div>
         <div class="flower-visual" aria-hidden="true">
           <svg viewBox="0 0 400 400" role="img" aria-label="Bông hoa abstract đang nở">
+            <defs>
+              <pattern id="sunflower-stripes" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+                <rect width="10" height="10" fill="#9b682c" />
+                <path d="M2 0V10" stroke="#69461b" stroke-width="2" />
+                <path d="M7 0V10" stroke="#d4a64b" stroke-width="1.2" />
+              </pattern>
+            </defs>
             <circle class="flower-ring" cx="200" cy="200" r="150" />
-            <path class="stem" d="M200 288 C205 330 195 358 173 384 M199 342 C225 329 247 330 265 344" />
-            <path class="leaf-branch" d="M200 330 C177 316 160 295 149 270 M202 337 C226 319 243 295 253 270 M190 354 C170 348 153 337 139 323 M211 354 C231 348 249 336 262 321" />
-            <g class="flower-leaf" style="--rotation:-58deg;--delay:.92s"><ellipse cx="150" cy="286" rx="16" ry="42" /></g>
-            <g class="flower-leaf" style="--rotation:58deg;--delay:1.02s"><ellipse cx="249" cy="286" rx="16" ry="42" /></g>
-            <g class="flower-leaf" style="--rotation:-72deg;--delay:1.12s"><ellipse cx="158" cy="340" rx="13" ry="34" /></g>
-            <g class="flower-leaf" style="--rotation:72deg;--delay:1.22s"><ellipse cx="242" cy="340" rx="13" ry="34" /></g>
+            <path class="stem" d="M200 288 C205 318 200 332 200 342 C198 360 197 372 188 384" />
+            <path class="leaf-branch" d="M200 342 C191 333 183 326 177 319 M200 342 C209 333 217 326 223 319 M200 342 C191 351 183 358 177 365 M200 342 C209 351 217 358 223 365" />
+            <g class="flower-leaf" style="--rotation:-45deg;--delay:.92s;--leaf-start:#d6eda9;--leaf-end:#6f9e40"><ellipse cx="177" cy="319" rx="16" ry="36" /></g>
+            <g class="flower-leaf" style="--rotation:45deg;--delay:1.02s;--leaf-start:#c6e49a;--leaf-end:#5d8c35"><ellipse cx="223" cy="319" rx="16" ry="36" /></g>
+            <g class="flower-leaf" style="--rotation:45deg;--delay:1.12s;--leaf-start:#b6d887;--leaf-end:#4f8030"><ellipse cx="177" cy="365" rx="16" ry="36" /></g>
+            <g class="flower-leaf" style="--rotation:-45deg;--delay:1.22s;--leaf-start:#a9cf78;--leaf-end:#3e7028"><ellipse cx="223" cy="365" rx="16" ry="36" /></g>
             <g class="petal seed-petal" style="--angle:0deg;--delay:.12s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
             <g class="petal" style="--angle:22.5deg;--delay:.22s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
             <g class="petal" style="--angle:45deg;--delay:.28s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
@@ -270,9 +283,10 @@
             <g class="petal" style="--angle:292.5deg;--delay:.94s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
             <g class="petal" style="--angle:315deg;--delay:1s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
             <g class="petal" style="--angle:337.5deg;--delay:1.06s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
-            <circle class="flower-center" cx="200" cy="200" r="27" />
-            <circle class="flower-center" cx="188" cy="190" r="4" fill="#f7ead2" />
-            <circle class="flower-center" cx="211" cy="206" r="4" fill="#f7ead2" />
+            <circle class="sunflower-core" cx="200" cy="200" r="39" />
+            <circle class="center-glint" cx="186" cy="187" r="3.5" />
+            <circle class="center-glint" cx="216" cy="194" r="3.5" />
+            <circle class="center-glint" cx="197" cy="218" r="3.5" />
           </svg>
         </div>
         <p class="tagline">A place to live, grow &amp; bloom</p>
