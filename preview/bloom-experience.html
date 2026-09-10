@@ -175,8 +175,12 @@
     .is-open .leaf-branch { animation: draw-branch .8s 1s var(--ease) forwards; }
     .flower-leaf { --leaf-start: #c9e59a; --leaf-end: #4c7d2f; opacity: 0; transform: rotate(var(--rotation)) scale(.08); transform-box: fill-box; transform-origin: center; }
     .flower-leaf path { fill: var(--leaf-start); stroke: #47772d; stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; paint-order: stroke fill; }
+    .flower-leaf .leaf-shine { fill: rgba(238,255,205,.76); stroke: none; opacity: 0; }
     .is-open .flower-leaf { animation: leaf-grow .95s var(--delay) var(--ease) forwards; }
     .is-open .flower-leaf path { animation: leaf-warm .95s var(--delay) var(--ease) forwards; }
+    .is-open .flower-leaf .leaf-shine { animation: leaf-shine .9s calc(var(--delay) + .22s) var(--ease) forwards; }
+    .clover-node { fill: #6c9839; stroke: #3f6d28; stroke-width: 1.5; opacity: 0; transform: scale(.2); transform-origin: center; }
+    .is-open .clover-node { animation: seed-in .6s 1.05s var(--ease) forwards; }
 
     .garden-visual { position: relative; width: min(70vw, 680px); height: min(37vw, 330px); min-height: 230px; margin: 28px 0 20px; }
     .garden-visual svg { width: 100%; height: 100%; overflow: visible; }
@@ -199,6 +203,7 @@
     @keyframes draw-branch { to { opacity: .82; stroke-dashoffset: 0; } }
     @keyframes leaf-grow { 0% { opacity: 0; transform: rotate(var(--rotation)) scale(.08); } 30% { opacity: 1; } 100% { opacity: .96; transform: rotate(var(--rotation)) scale(1); } }
     @keyframes leaf-warm { 0% { fill: var(--leaf-start); } 100% { fill: var(--leaf-end); } }
+    @keyframes leaf-shine { 0% { opacity: 0; } 45% { opacity: .9; } 100% { opacity: .52; } }
     @keyframes draw-line { to { opacity: 1; stroke-dashoffset: 0; } }
     @keyframes leaf-in { to { opacity: .9; transform: scale(1) rotate(0); } }
     @keyframes drift { 50% { transform: translate3d(5px,-8px,0) rotate(4deg); } }
@@ -227,6 +232,7 @@
       .leaf-branch { opacity: .82; stroke-dashoffset: 0; }
       .flower-leaf { opacity: .96; transform: rotate(var(--rotation)) scale(1); }
       .flower-leaf path { fill: var(--leaf-end); }
+      .flower-leaf .leaf-shine { opacity: .52; }
       .floating-petal { animation: none; }
     }
   </style>
@@ -261,11 +267,12 @@
               </pattern>
             </defs>
             <path class="stem" d="M200 218 C208 257 205 304 200 342 C198 365 190 388 174 398" />
-            <path class="leaf-branch" d="M200 342 C191 337 184 331 177 324 M200 342 C209 337 216 331 223 324 M200 342 C190 349 184 358 177 369 M200 342 C210 349 216 358 223 369" />
-            <g class="flower-leaf" style="--rotation:0deg;--delay:.92s;--leaf-start:#d6eda9;--leaf-end:#6f9e40"><path d="M198 338 C185 335 168 329 161 318 C155 309 158 300 166 298 C174 296 181 301 183 308 C184 301 191 296 198 300 C207 305 205 317 201 326 C199 331 198 335 198 338 Z" /></g>
-            <g class="flower-leaf" style="--rotation:0deg;--delay:1.02s;--leaf-start:#c6e49a;--leaf-end:#5d8c35"><path d="M202 338 C215 335 232 329 239 318 C245 309 242 300 234 298 C226 296 219 301 217 308 C216 301 209 296 202 300 C193 305 195 317 199 326 C201 331 202 335 202 338 Z" /></g>
-            <g class="flower-leaf" style="--rotation:0deg;--delay:1.12s;--leaf-start:#b6d887;--leaf-end:#4f8030"><path d="M198 346 C185 349 168 355 161 366 C155 375 158 384 166 386 C174 388 181 383 183 376 C184 383 191 388 198 384 C207 379 205 367 201 358 C199 353 198 349 198 346 Z" /></g>
-            <g class="flower-leaf" style="--rotation:0deg;--delay:1.22s;--leaf-start:#a9cf78;--leaf-end:#3e7028"><path d="M202 346 C215 349 232 355 239 366 C245 375 242 384 234 386 C226 388 219 383 217 376 C216 383 209 388 202 384 C193 379 195 367 199 358 C201 353 202 349 202 346 Z" /></g>
+            <path class="leaf-branch" d="M200 342 C192 338 187 333 181 327 M200 342 C208 338 213 333 219 327 M200 342 C192 347 187 353 181 360 M200 342 C208 347 213 353 219 360" />
+            <g class="flower-leaf" style="--rotation:0deg;--delay:.92s;--leaf-start:#d6eda9;--leaf-end:#6f9e40"><path d="M199 341 C190 339 177 336 169 330 C161 324 160 314 166 308 C172 302 181 304 185 311 C187 303 195 300 202 305 C210 311 207 323 203 331 C201 336 200 339 199 341 Z" /><path class="leaf-shine" d="M168 311 C172 307 179 308 182 312 C177 312 173 315 170 319 C167 317 166 314 168 311 Z" /></g>
+            <g class="flower-leaf" style="--rotation:0deg;--delay:1.02s;--leaf-start:#c6e49a;--leaf-end:#5d8c35"><path d="M201 341 C210 339 223 336 231 330 C239 324 240 314 234 308 C228 302 219 304 215 311 C213 303 205 300 198 305 C190 311 193 323 197 331 C199 336 200 339 201 341 Z" /><path class="leaf-shine" d="M232 311 C228 307 221 308 218 312 C223 312 227 315 230 319 C233 317 234 314 232 311 Z" /></g>
+            <g class="flower-leaf" style="--rotation:0deg;--delay:1.12s;--leaf-start:#b6d887;--leaf-end:#4f8030"><path d="M199 343 C190 345 177 348 169 354 C161 360 160 370 166 376 C172 382 181 380 185 373 C187 381 195 384 202 379 C210 373 207 361 203 353 C201 348 200 345 199 343 Z" /><path class="leaf-shine" d="M168 358 C172 354 179 354 182 358 C177 358 173 361 170 365 C167 363 166 361 168 358 Z" /></g>
+            <g class="flower-leaf" style="--rotation:0deg;--delay:1.22s;--leaf-start:#a9cf78;--leaf-end:#3e7028"><path d="M201 343 C210 345 223 348 231 354 C239 360 240 370 234 376 C228 382 219 380 215 373 C213 381 205 384 198 379 C190 373 193 361 197 353 C199 348 200 345 201 343 Z" /><path class="leaf-shine" d="M232 358 C228 354 221 354 218 358 C223 358 227 361 230 365 C233 363 234 361 232 358 Z" /></g>
+            <circle class="clover-node" cx="200" cy="342" r="4.5" />
             <g class="flower-head" transform="translate(0 -20)">
               <circle class="flower-ring" cx="200" cy="200" r="150" />
               <g class="petal seed-petal" style="--angle:0deg;--delay:.12s"><ellipse cx="200" cy="120" rx="20" ry="70" /></g>
