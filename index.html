@@ -246,6 +246,14 @@ const bloomMobileOptimizationStyle=document.createElement('style');bloomMobileOp
  #modal .modal-foot .btn,#paymentModal .actions .btn{min-height:46px}
 }
 @media(max-width:339px){.dashboard-filter{grid-template-columns:minmax(0,1fr)}.dashboard-filter>strong,.dashboard-filter>label,.dashboard-filter>.btn{grid-column:1}}
+
+@media(max-width:1023px){
+ input[type="date"],input[type="month"]{max-width:100%;min-width:0;box-sizing:border-box;height:var(--mobile-control-height);min-height:var(--mobile-control-height);font-size:16px;justify-self:start}
+ input[type="date"]{width:min(100%,190px)}
+ input[type="month"]{width:min(100%,210px)}
+ .dashboard-filter>label input[type="month"],#dashboardFrom,#dashboardTo{width:min(100%,180px);justify-self:start}
+ #invoicePeriod,#period{width:min(100%,210px);justify-self:start}
+}
 `;document.head.append(bloomMobileOptimizationStyle);
 function bloomApplyMobileInputModes(root=document){root.querySelectorAll?.('input[type="number"]').forEach(input=>{const name=(input.name||input.id||'').toLowerCase();input.inputMode=/day|floor|count|start|end|number|amount|rate|meter/.test(name)?'numeric':'decimal'})}
 bloomApplyMobileInputModes();new MutationObserver(records=>{if(records.some(record=>record.addedNodes.length))bloomApplyMobileInputModes()}).observe(document.body,{childList:true,subtree:true});
