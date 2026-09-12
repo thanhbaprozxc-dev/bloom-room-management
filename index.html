@@ -251,7 +251,7 @@ const bloomMobileOptimizationStyle=document.createElement('style');bloomMobileOp
  input[type="date"],input[type="month"]{max-width:100%;min-width:0;box-sizing:border-box;height:var(--mobile-control-height);min-height:var(--mobile-control-height);font-size:16px;justify-self:start}
  input[type="date"]{width:min(100%,190px)}
  input[type="month"]{width:min(100%,210px)}
- .dashboard-filter>label input[type="month"],#dashboardFrom,#dashboardTo{width:min(100%,180px);justify-self:start}
+ .dashboard-filter>label input[type="month"],#dashboardFrom,#dashboardTo{width:min(100%,clamp(160px,40vw,180px));justify-self:start}
  #invoicePeriod,#period{width:min(100%,210px);justify-self:start}
 }
 `;document.head.append(bloomMobileOptimizationStyle);
