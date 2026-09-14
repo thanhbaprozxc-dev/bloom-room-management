@@ -302,6 +302,9 @@ load=async function(name){
   if(name==='leases'){
     const [rooms,tenants,leases]=await Promise.all([api('rooms&property_id='+selectedPropertyId),api('tenants&property_id='+selectedPropertyId),api('leases&property_id='+selectedPropertyId)]);
     cache.rooms=rooms;cache.tenants=tenants;cache.leases=leases;
+  }else if(name==='monthly'){
+    const [rooms,monthly]=await Promise.all([api('rooms&property_id='+selectedPropertyId),api('monthly&period='+encodeURIComponent(selectedBillingPeriod)+'&property_id='+selectedPropertyId)]);
+    cache.rooms=rooms;
   }else if(name==='visas'){
     const [tenants,visas]=await Promise.all([api('tenants&property_id='+selectedPropertyId),api('visas&property_id='+selectedPropertyId)]);
     cache.tenants=tenants;cache.visas=visas;
