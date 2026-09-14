@@ -7,6 +7,12 @@ create index if not exists tenants_property_idx
 create index if not exists leases_property_idx
   on public.leases(property_id);
 
+create index if not exists leases_room_idx
+  on public.leases(room_id);
+
+create index if not exists leases_representative_tenant_idx
+  on public.leases(representative_tenant_id);
+
 create index if not exists lease_tenants_tenant_idx
   on public.lease_tenants(tenant_id);
 
