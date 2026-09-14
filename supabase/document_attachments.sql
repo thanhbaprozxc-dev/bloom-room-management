@@ -22,6 +22,8 @@ create index if not exists document_attachments_property_idx
   on public.document_attachments(property_id);
 create index if not exists document_attachments_entity_idx
   on public.document_attachments(entity_type,entity_id);
+create index if not exists document_attachments_property_entity_idx
+  on public.document_attachments(property_id,entity_type,entity_id);
 create index if not exists document_attachments_sort_idx
   on public.document_attachments(sort_order);
 
