@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-labelledby="bloomLogoTitle bloomLogoDesc">
+  <title id="bloomLogoTitle">Bloom Apartment</title>
+  <desc id="bloomLogoDesc">Biểu tượng ngôi nhà có cửa sổ bốn ô và hai chiếc lá cạnh chữ Bloom Apartment</desc>
+  <g fill="none" stroke="#557329" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 51 56 18l38 33" />
+    <path d="M27 47v48c0 4 3 7 7 7h44c4 0 7-3 7-7V47" />
+    <rect x="43" y="57" width="26" height="25" rx="2" />
+    <path d="M56 57v25M43 69.5h26M56 102V86h11v16" />
+    <path d="M78 100c9-17 24-25 42-24-2 17-14 31-31 34-5-1-9-4-11-10Z" />
+    <path d="M78 101c12-8 25-16 42-25" />
+    <path d="M78 104c12 1 22 8 25 19-13 1-25-5-32-15 1-2 4-4 7-4Z" />
+    <path d="M78 105c8 4 17 10 25 18" />
+  </g>
+  <g fill="#557329" font-family="Arial, Helvetica, sans-serif" text-anchor="start">
+    <text x="146" y="58" font-size="39" font-weight="700" letter-spacing="4">BLOOM</text>
+    <text x="149" y="84" font-size="15" font-weight="600" letter-spacing="7">APARTMENT</text>
+  </g>
+</svg>
+
