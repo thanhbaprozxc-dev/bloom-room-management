@@ -83,6 +83,11 @@ create unique index if not exists periods_id_property_uidx on public.billing_per
 create unique index if not exists leases_one_active_room_uidx on public.leases(room_id) where status='active';
 create unique index if not exists tenants_identity_property_uidx on public.tenants(property_id,identity_type,identity_number) where identity_number is not null and btrim(identity_number)<>'';
 create unique index if not exists visas_number_property_uidx on public.tenant_visas(property_id,visa_number) where visa_number is not null and btrim(visa_number)<>'';
+create index if not exists tenants_property_idx on public.tenants(property_id);
+create index if not exists leases_property_idx on public.leases(property_id);
+create index if not exists lease_tenants_tenant_idx on public.lease_tenants(tenant_id);
+create index if not exists tenant_visas_property_status_expiry_idx on public.tenant_visas(property_id,status,expiry_date);
+create index if not exists monthly_records_property_period_idx on public.monthly_room_records(property_id,billing_period_id);
 
 do $$ begin
   alter table public.leases add constraint leases_room_property_fk foreign key(room_id,property_id) references public.rooms(id,property_id) on delete restrict;
