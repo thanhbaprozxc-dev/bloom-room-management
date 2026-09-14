@@ -287,6 +287,184 @@ const bloomMobileOptimizationStyle=document.createElement('style');bloomMobileOp
 function bloomApplyMobileInputModes(root=document){root.querySelectorAll?.('input[type="number"]').forEach(input=>{const name=(input.name||input.id||'').toLowerCase();input.inputMode=/day|floor|count|start|end|number|amount|rate|meter/.test(name)?'numeric':'decimal'})}
 bloomApplyMobileInputModes();new MutationObserver(records=>{if(records.some(record=>record.addedNodes.length))bloomApplyMobileInputModes()}).observe(document.body,{childList:true,subtree:true});
 document.addEventListener('focusin',event=>{if(!window.matchMedia('(max-width: 1023px)').matches||!event.target.matches('input,select,textarea'))return;setTimeout(()=>event.target.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}),80)});
+const BLOOM_COUNTRIES=[
+ {code:'VN',nameVi:'Việt Nam',nameEn:'Vietnam'},
+ {code:'RU',nameVi:'Nga',nameEn:'Russia'},
+ {code:'US',nameVi:'Hoa Kỳ',nameEn:'United States'},
+ {code:'KR',nameVi:'Hàn Quốc',nameEn:'South Korea'},
+ {code:'JP',nameVi:'Nhật Bản',nameEn:'Japan'},
+ {code:'CN',nameVi:'Trung Quốc',nameEn:'China'},
+ {code:'TW',nameVi:'Đài Loan',nameEn:'Taiwan'},
+ {code:'GB',nameVi:'Anh',nameEn:'United Kingdom'},
+ {code:'DE',nameVi:'Đức',nameEn:'Germany'},
+ {code:'FR',nameVi:'Pháp',nameEn:'France'},
+ {code:'AU',nameVi:'Úc',nameEn:'Australia'},
+ {code:'CA',nameVi:'Canada',nameEn:'Canada'},
+ {code:'TH',nameVi:'Thái Lan',nameEn:'Thailand'},
+ {code:'SG',nameVi:'Singapore',nameEn:'Singapore'},
+ {code:'MY',nameVi:'Malaysia',nameEn:'Malaysia'},
+ {code:'PH',nameVi:'Philippines',nameEn:'Philippines'},
+ {code:'ID',nameVi:'Indonesia',nameEn:'Indonesia'},
+ {code:'IN',nameVi:'Ấn Độ',nameEn:'India'},
+ {code:'AF',nameVi:'Afghanistan',nameEn:'Afghanistan'},
+ {code:'AL',nameVi:'Albania',nameEn:'Albania'},
+ {code:'DZ',nameVi:'Algeria',nameEn:'Algeria'},
+ {code:'AD',nameVi:'Andorra',nameEn:'Andorra'},
+ {code:'AO',nameVi:'Angola',nameEn:'Angola'},
+ {code:'AG',nameVi:'Antigua và Barbuda',nameEn:'Antigua and Barbuda'},
+ {code:'AR',nameVi:'Argentina',nameEn:'Argentina'},
+ {code:'AM',nameVi:'Armenia',nameEn:'Armenia'},
+ {code:'AT',nameVi:'Áo',nameEn:'Austria'},
+ {code:'AZ',nameVi:'Azerbaijan',nameEn:'Azerbaijan'},
+ {code:'BS',nameVi:'Bahamas',nameEn:'Bahamas'},
+ {code:'BH',nameVi:'Bahrain',nameEn:'Bahrain'},
+ {code:'BD',nameVi:'Bangladesh',nameEn:'Bangladesh'},
+ {code:'BB',nameVi:'Barbados',nameEn:'Barbados'},
+ {code:'BY',nameVi:'Belarus',nameEn:'Belarus'},
+ {code:'BE',nameVi:'Bỉ',nameEn:'Belgium'},
+ {code:'BZ',nameVi:'Belize',nameEn:'Belize'},
+ {code:'BJ',nameVi:'Benin',nameEn:'Benin'},
+ {code:'BO',nameVi:'Bolivia',nameEn:'Bolivia'},
+ {code:'BA',nameVi:'Bosnia và Herzegovina',nameEn:'Bosnia and Herzegovina'},
+ {code:'BW',nameVi:'Botswana',nameEn:'Botswana'},
+ {code:'BR',nameVi:'Brazil',nameEn:'Brazil'},
+ {code:'BN',nameVi:'Brunei',nameEn:'Brunei'},
+ {code:'BG',nameVi:'Bulgaria',nameEn:'Bulgaria'},
+ {code:'BF',nameVi:'Burkina Faso',nameEn:'Burkina Faso'},
+ {code:'BI',nameVi:'Burundi',nameEn:'Burundi'},
+ {code:'CV',nameVi:'Cabo Verde',nameEn:'Cabo Verde'},
+ {code:'KH',nameVi:'Campuchia',nameEn:'Cambodia'},
+ {code:'CM',nameVi:'Cameroon',nameEn:'Cameroon'},
+ {code:'CL',nameVi:'Chile',nameEn:'Chile'},
+ {code:'CO',nameVi:'Colombia',nameEn:'Colombia'},
+ {code:'CR',nameVi:'Costa Rica',nameEn:'Costa Rica'},
+ {code:'HR',nameVi:'Croatia',nameEn:'Croatia'},
+ {code:'CU',nameVi:'Cuba',nameEn:'Cuba'},
+ {code:'CY',nameVi:'Síp',nameEn:'Cyprus'},
+ {code:'CZ',nameVi:'Cộng hòa Séc',nameEn:'Czechia'},
+ {code:'DK',nameVi:'Đan Mạch',nameEn:'Denmark'},
+ {code:'DO',nameVi:'Cộng hòa Dominica',nameEn:'Dominican Republic'},
+ {code:'EC',nameVi:'Ecuador',nameEn:'Ecuador'},
+ {code:'EG',nameVi:'Ai Cập',nameEn:'Egypt'},
+ {code:'SV',nameVi:'El Salvador',nameEn:'El Salvador'},
+ {code:'EE',nameVi:'Estonia',nameEn:'Estonia'},
+ {code:'ET',nameVi:'Ethiopia',nameEn:'Ethiopia'},
+ {code:'FJ',nameVi:'Fiji',nameEn:'Fiji'},
+ {code:'FI',nameVi:'Phần Lan',nameEn:'Finland'},
+ {code:'GE',nameVi:'Georgia',nameEn:'Georgia'},
+ {code:'GH',nameVi:'Ghana',nameEn:'Ghana'},
+ {code:'GR',nameVi:'Hy Lạp',nameEn:'Greece'},
+ {code:'GT',nameVi:'Guatemala',nameEn:'Guatemala'},
+ {code:'HT',nameVi:'Haiti',nameEn:'Haiti'},
+ {code:'HN',nameVi:'Honduras',nameEn:'Honduras'},
+ {code:'HU',nameVi:'Hungary',nameEn:'Hungary'},
+ {code:'IS',nameVi:'Iceland',nameEn:'Iceland'},
+ {code:'IR',nameVi:'Iran',nameEn:'Iran'},
+ {code:'IQ',nameVi:'Iraq',nameEn:'Iraq'},
+ {code:'IE',nameVi:'Ireland',nameEn:'Ireland'},
+ {code:'IL',nameVi:'Israel',nameEn:'Israel'},
+ {code:'IT',nameVi:'Ý',nameEn:'Italy'},
+ {code:'JM',nameVi:'Jamaica',nameEn:'Jamaica'},
+ {code:'JO',nameVi:'Jordan',nameEn:'Jordan'},
+ {code:'KZ',nameVi:'Kazakhstan',nameEn:'Kazakhstan'},
+ {code:'KE',nameVi:'Kenya',nameEn:'Kenya'},
+ {code:'KW',nameVi:'Kuwait',nameEn:'Kuwait'},
+ {code:'KG',nameVi:'Kyrgyzstan',nameEn:'Kyrgyzstan'},
+ {code:'LA',nameVi:'Lào',nameEn:'Laos'},
+ {code:'LV',nameVi:'Latvia',nameEn:'Latvia'},
+ {code:'LB',nameVi:'Liban',nameEn:'Lebanon'},
+ {code:'LY',nameVi:'Libya',nameEn:'Libya'},
+ {code:'LT',nameVi:'Litva',nameEn:'Lithuania'},
+ {code:'LU',nameVi:'Luxembourg',nameEn:'Luxembourg'},
+ {code:'MG',nameVi:'Madagascar',nameEn:'Madagascar'},
+ {code:'MW',nameVi:'Malawi',nameEn:'Malawi'},
+ {code:'MV',nameVi:'Maldives',nameEn:'Maldives'},
+ {code:'ML',nameVi:'Mali',nameEn:'Mali'},
+ {code:'MT',nameVi:'Malta',nameEn:'Malta'},
+ {code:'MU',nameVi:'Mauritius',nameEn:'Mauritius'},
+ {code:'MX',nameVi:'Mexico',nameEn:'Mexico'},
+ {code:'MD',nameVi:'Moldova',nameEn:'Moldova'},
+ {code:'MC',nameVi:'Monaco',nameEn:'Monaco'},
+ {code:'MN',nameVi:'Mông Cổ',nameEn:'Mongolia'},
+ {code:'ME',nameVi:'Montenegro',nameEn:'Montenegro'},
+ {code:'MA',nameVi:'Maroc',nameEn:'Morocco'},
+ {code:'MZ',nameVi:'Mozambique',nameEn:'Mozambique'},
+ {code:'MM',nameVi:'Myanmar',nameEn:'Myanmar'},
+ {code:'NA',nameVi:'Namibia',nameEn:'Namibia'},
+ {code:'NP',nameVi:'Nepal',nameEn:'Nepal'},
+ {code:'NL',nameVi:'Hà Lan',nameEn:'Netherlands'},
+ {code:'NZ',nameVi:'New Zealand',nameEn:'New Zealand'},
+ {code:'NI',nameVi:'Nicaragua',nameEn:'Nicaragua'},
+ {code:'NG',nameVi:'Nigeria',nameEn:'Nigeria'},
+ {code:'MK',nameVi:'Bắc Macedonia',nameEn:'North Macedonia'},
+ {code:'NO',nameVi:'Na Uy',nameEn:'Norway'},
+ {code:'OM',nameVi:'Oman',nameEn:'Oman'},
+ {code:'PK',nameVi:'Pakistan',nameEn:'Pakistan'},
+ {code:'PA',nameVi:'Panama',nameEn:'Panama'},
+ {code:'PY',nameVi:'Paraguay',nameEn:'Paraguay'},
+ {code:'PE',nameVi:'Peru',nameEn:'Peru'},
+ {code:'PL',nameVi:'Ba Lan',nameEn:'Poland'},
+ {code:'PT',nameVi:'Bồ Đào Nha',nameEn:'Portugal'},
+ {code:'QA',nameVi:'Qatar',nameEn:'Qatar'},
+ {code:'RO',nameVi:'Romania',nameEn:'Romania'},
+ {code:'RW',nameVi:'Rwanda',nameEn:'Rwanda'},
+ {code:'SA',nameVi:'Ả Rập Xê Út',nameEn:'Saudi Arabia'},
+ {code:'SN',nameVi:'Senegal',nameEn:'Senegal'},
+ {code:'RS',nameVi:'Serbia',nameEn:'Serbia'},
+ {code:'SC',nameVi:'Seychelles',nameEn:'Seychelles'},
+ {code:'SL',nameVi:'Sierra Leone',nameEn:'Sierra Leone'},
+ {code:'ZA',nameVi:'Nam Phi',nameEn:'South Africa'},
+ {code:'ES',nameVi:'Tây Ban Nha',nameEn:'Spain'},
+ {code:'LK',nameVi:'Sri Lanka',nameEn:'Sri Lanka'},
+ {code:'SD',nameVi:'Sudan',nameEn:'Sudan'},
+ {code:'SE',nameVi:'Thụy Điển',nameEn:'Sweden'},
+ {code:'CH',nameVi:'Thụy Sĩ',nameEn:'Switzerland'},
+ {code:'SY',nameVi:'Syria',nameEn:'Syria'},
+ {code:'TJ',nameVi:'Tajikistan',nameEn:'Tajikistan'},
+ {code:'TZ',nameVi:'Tanzania',nameEn:'Tanzania'},
+ {code:'TN',nameVi:'Tunisia',nameEn:'Tunisia'},
+ {code:'TR',nameVi:'Thổ Nhĩ Kỳ',nameEn:'Turkey'},
+ {code:'TM',nameVi:'Turkmenistan',nameEn:'Turkmenistan'},
+ {code:'UG',nameVi:'Uganda',nameEn:'Uganda'},
+ {code:'UA',nameVi:'Ukraina',nameEn:'Ukraine'},
+ {code:'AE',nameVi:'Các Tiểu vương quốc Ả Rập Thống nhất',nameEn:'United Arab Emirates'},
+ {code:'UY',nameVi:'Uruguay',nameEn:'Uruguay'},
+ {code:'UZ',nameVi:'Uzbekistan',nameEn:'Uzbekistan'},
+ {code:'VE',nameVi:'Venezuela',nameEn:'Venezuela'},
+ {code:'YE',nameVi:'Yemen',nameEn:'Yemen'},
+ {code:'ZM',nameVi:'Zambia',nameEn:'Zambia'},
+ {code:'ZW',nameVi:'Zimbabwe',nameEn:'Zimbabwe'}
+];
+const BLOOM_COUNTRY_BY_CODE=Object.fromEntries(BLOOM_COUNTRIES.map(country=>[country.code,country]));
+const BLOOM_NATIONALITY_ALIASES={'nga':'RU','russia':'RU','russian':'RU','russian federation':'RU','viet nam':'VN','vietnam':'VN','vietnamese':'VN','hoa ky':'US','usa':'US','united states':'US','american':'US','han quoc':'KR','korea':'KR','south korea':'KR','south korean':'KR','korean':'KR','trung quoc':'CN','china':'CN','chinese':'CN','dai loan':'TW','taiwan':'TW','taiwanese':'TW','anh':'GB','england':'GB','uk':'GB','united kingdom':'GB','british':'GB'};
+const BLOOM_COUNTRY_COLLATOR=new Intl.Collator('vi',{sensitivity:'base'});
+function bloomCountrySearchKey(value){return String(value??'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLocaleLowerCase('vi').replace(/[^a-z0-9]+/g,' ').trim()}
+function bloomCountryCodeToFlag(code){const value=String(code||'').toUpperCase();if(!/^[A-Z]{2}$/.test(value))return'';return[...value].map(char=>String.fromCodePoint(127397+char.charCodeAt(0))).join('')}
+function bloomNormalizeNationality(value){const raw=String(value??'').trim();if(!raw)return'';const code=raw.toUpperCase();if(BLOOM_COUNTRY_BY_CODE[code])return code;const key=bloomCountrySearchKey(raw);if(BLOOM_NATIONALITY_ALIASES[key])return BLOOM_NATIONALITY_ALIASES[key];const found=BLOOM_COUNTRIES.find(country=>bloomCountrySearchKey(country.nameVi)===key||bloomCountrySearchKey(country.nameEn)===key);return found?.code||raw}
+function bloomCountryDetails(value){const raw=String(value??'').trim(),code=bloomNormalizeNationality(raw),country=BLOOM_COUNTRY_BY_CODE[code];if(country)return{...country,flag:bloomCountryCodeToFlag(country.code)};return{code:'',nameVi:raw,nameEn:'',flag:raw?'🌐':''}}
+function bloomCountryFlag(value){return bloomCountryDetails(value).flag}
+function bloomCountryLabel(value){return bloomCountryDetails(value).nameVi||''}
+function bloomCountryDisplayMarkup(value){const raw=String(value??'').trim();if(!raw)return'<span class="tenant-nationality muted">—</span>';const country=bloomCountryDetails(raw),searchText=[raw,country.code,country.nameVi,country.nameEn].filter(Boolean).join(' ');return`<span class="tenant-nationality" data-search-text="${esc(searchText)}" title="${esc(raw)}"><span class="tenant-flag" aria-hidden="true">${esc(country.flag)}</span><span>${esc(country.nameVi)}</span></span>`}
+function bloomTenantNameMarkup(name,nationality){const country=bloomCountryDetails(nationality),flag=country.flag;return`<strong class="tenant-name-with-flag">${flag?`<span class="tenant-flag" aria-hidden="true">${esc(flag)}</span>`:''}<span>${esc(String(name??'—'))}</span></strong>`}
+function bloomCountryPickerMarkup(value=''){const normalized=bloomNormalizeNationality(value),country=bloomCountryDetails(value),flag=country.flag;return`<div class="country-picker" data-country-picker><input type="hidden" name="nationality" value="${esc(normalized)}"><button type="button" class="country-picker-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="country-picker-value"><span class="country-picker-flag tenant-flag" data-country-flag aria-hidden="true">${esc(flag)}</span><span data-country-label>${esc(country.nameVi||'Chọn quốc tịch')}</span></span><span class="country-picker-chevron" aria-hidden="true">⌄</span></button><div class="country-picker-menu" data-country-menu hidden><input type="search" class="country-picker-search" data-country-search placeholder="Tìm quốc gia..." autocomplete="off" aria-label="Tìm quốc gia"><div class="country-picker-options" data-country-options role="listbox"></div></div></div>`}
+function bloomCountryOptionScore(country,query){const code=country.code.toLowerCase(),vi=bloomCountrySearchKey(country.nameVi),en=bloomCountrySearchKey(country.nameEn);if(code===query)return 0;if(code.startsWith(query))return 1;if(vi===query)return 2;if(en===query)return 3;if(vi.startsWith(query))return 4;if(en.startsWith(query))return 5;return 6}
+function bloomRenderCountryOptions(picker){const search=picker.querySelector('[data-country-search]')?.value||'',query=bloomCountrySearchKey(search),selected=bloomNormalizeNationality(picker.querySelector('input[name="nationality"]')?.value||''),options=BLOOM_COUNTRIES.filter(country=>!query||[country.code,bloomCountrySearchKey(country.nameVi),bloomCountrySearchKey(country.nameEn)].some(value=>String(value).includes(query))).sort((a,b)=>query?bloomCountryOptionScore(a,query)-bloomCountryOptionScore(b,query)||BLOOM_COUNTRY_COLLATOR.compare(a.nameVi,b.nameVi):0),target=picker.querySelector('[data-country-options]');if(!target)return;target.innerHTML=options.length?options.map(country=>`<button type="button" class="country-picker-option" role="option" aria-selected="${selected===country.code}" data-country-code="${country.code}"><span class="tenant-flag" aria-hidden="true">${bloomCountryCodeToFlag(country.code)}</span><span>${esc(country.nameVi)}</span><small>${esc(country.nameEn)}</small></button>`).join(''):'<div class="country-picker-empty">Không tìm thấy quốc gia</div>'}
+function bloomPositionCountryPicker(picker){const menu=picker?.querySelector('[data-country-menu]'),trigger=picker?.querySelector('.country-picker-trigger');if(!menu||menu.hidden||!trigger)return;const rect=trigger.getBoundingClientRect(),gutter=8,maxHeight=Math.min(window.innerHeight*.55,380),width=Math.min(rect.width,window.innerWidth-gutter*2);menu.style.width=width+'px';menu.style.left=Math.max(gutter,Math.min(rect.left,window.innerWidth-width-gutter))+'px';menu.style.maxHeight=maxHeight+'px';menu.style.top='auto';menu.style.bottom='auto';const menuHeight=menu.offsetHeight;if(rect.bottom+6+menuHeight<=window.innerHeight-gutter)menu.style.top=rect.bottom+6+'px';else menu.style.top=Math.max(gutter,rect.top-menuHeight-6)+'px'}
+function bloomCloseCountryPicker(picker){if(!picker)return;const menu=picker.querySelector('[data-country-menu]');if(menu)menu.hidden=true;picker.querySelector('.country-picker-trigger')?.setAttribute('aria-expanded','false')}
+function bloomCloseAllCountryPickers(except){document.querySelectorAll('[data-country-picker]').forEach(picker=>{if(picker!==except)bloomCloseCountryPicker(picker)})}
+function bloomSetCountryValue(picker,value){const normalized=bloomNormalizeNationality(value),hidden=picker.querySelector('input[name="nationality"]'),country=bloomCountryDetails(value),flag=picker.querySelector('[data-country-flag]'),label=picker.querySelector('[data-country-label]');if(hidden)hidden.value=normalized;if(flag)flag.textContent=country.flag;if(label)label.textContent=country.nameVi||'Chọn quốc tịch';bloomRenderCountryOptions(picker)}
+function bloomMoveCountryOption(picker,direction){const options=[...picker.querySelectorAll('.country-picker-option')];if(!options.length)return;const current=document.activeElement,index=options.indexOf(current),next=options[(index+direction+options.length)%options.length]||options[0];next.focus()}
+let bloomCountryPickerEventsReady=false;
+function bloomInitCountryPicker(picker){if(!picker||picker.dataset.ready==='1')return;picker.dataset.ready='1';const trigger=picker.querySelector('.country-picker-trigger'),menu=picker.querySelector('[data-country-menu]'),search=picker.querySelector('[data-country-search]'),options=picker.querySelector('[data-country-options]');bloomRenderCountryOptions(picker);trigger?.addEventListener('click',()=>{const opening=menu.hidden;bloomCloseAllCountryPickers(picker);menu.hidden=!opening;trigger.setAttribute('aria-expanded',String(opening));if(opening){bloomRenderCountryOptions(picker);bloomPositionCountryPicker(picker);requestAnimationFrame(()=>{search.focus();bloomPositionCountryPicker(picker)})}});trigger?.addEventListener('keydown',event=>{if(['Enter',' ','ArrowDown'].includes(event.key)){event.preventDefault();trigger.click()}else if(event.key==='Escape')bloomCloseCountryPicker(picker)});search?.addEventListener('input',()=>{bloomRenderCountryOptions(picker);bloomPositionCountryPicker(picker)});search?.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();bloomCloseCountryPicker(picker);trigger.focus()}else if(event.key==='ArrowDown'){event.preventDefault();bloomMoveCountryOption(picker,1)}});options?.addEventListener('click',event=>{const option=event.target.closest('.country-picker-option');if(!option)return;bloomSetCountryValue(picker,option.dataset.countryCode);bloomCloseCountryPicker(picker);trigger.focus()});options?.addEventListener('keydown',event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();bloomMoveCountryOption(picker,event.key==='ArrowDown'?1:-1)}else if(event.key==='Escape'){event.preventDefault();bloomCloseCountryPicker(picker);trigger.focus()}});if(!bloomCountryPickerEventsReady){bloomCountryPickerEventsReady=true;document.addEventListener('click',event=>{if(!event.target.closest('[data-country-picker]'))bloomCloseAllCountryPickers()});window.addEventListener('resize',()=>document.querySelectorAll('[data-country-picker]').forEach(bloomPositionCountryPicker));document.addEventListener('scroll',()=>document.querySelectorAll('[data-country-picker]').forEach(bloomPositionCountryPicker),true)}}
+const bloomCountryPickerStyle=document.createElement('style');bloomCountryPickerStyle.textContent=`
+.country-picker{position:relative;display:grid;gap:6px;min-width:0;width:100%}.country-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);text-align:left}.country-picker-trigger:focus-visible{outline:3px solid #9bd5a1;outline-offset:2px}.country-picker-value{display:flex;align-items:center;gap:7px;min-width:0}.country-picker-value>[data-country-label]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.country-picker-flag{min-width:1.2em}.country-picker-chevron{font-size:18px;color:var(--muted);line-height:1}.country-picker-menu{position:fixed;z-index:1001;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 14px 34px #17200f2b}.country-picker-search{width:calc(100% - 12px);height:42px;margin:6px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:#fbfcf9;color:var(--ink);font-size:16px}.country-picker-options{min-height:0;overflow-y:auto;padding:4px}.country-picker-option{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-height:44px;border:0;border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink);text-align:left;font-size:15px}.country-picker-option:hover,.country-picker-option:focus-visible,.country-picker-option[aria-selected="true"]{background:var(--green2);outline:none}.country-picker-option small{color:var(--muted);font-size:12px}.country-picker-empty{padding:14px;color:var(--muted);text-align:center}.tenant-name-with-flag,.tenant-nationality{display:inline-flex;align-items:center;gap:6px;min-width:0}.tenant-flag{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:1em;line-height:1}.tenant-name-with-flag>span:last-child{min-width:0}.tenant-nationality{white-space:nowrap}@media(max-width:1023px){.country-picker-menu{max-width:calc(100vw - 16px)}.country-picker-option{min-height:44px;padding-block:10px}}`;
+document.head.append(bloomCountryPickerStyle);
+FIELDS.tenants=FIELDS.tenants.map(field=>field[0]==='nationality'?[field[0],field[1],'country']:field);
+const bloomCountryOpenModalBase=openModal;openModal=async function(record=null){await bloomCountryOpenModalBase(record);if(current!=='tenants')return;const field=document.querySelector('#modalForm input[name="nationality"]')?.closest('.field');if(!field)return;const raw=field.querySelector('input[name="nationality"]')?.value||'';field.innerHTML='<label>Quốc tịch</label>'+bloomCountryPickerMarkup(raw);bloomInitCountryPicker(field.querySelector('[data-country-picker]'))};
+function bloomRenderTenantNationality(){document.querySelectorAll('#tenantsBody tr').forEach(row=>{const nameCell=row.children[0],nationalityCell=row.children[3];if(!nameCell||!nationalityCell||nameCell.querySelector('.tenant-name-with-flag'))return;const name=nameCell.textContent.trim(),nationality=nationalityCell.textContent.trim()==='—'?'':nationalityCell.textContent.trim();nameCell.innerHTML=bloomTenantNameMarkup(name,nationality);nationalityCell.innerHTML=bloomCountryDisplayMarkup(nationality)})}
+const bloomTenantLoadWithCountryBase=load;load=async function(name){const result=await bloomTenantLoadWithCountryBase(name);if(name==='tenants')bloomRenderTenantNationality();return result};
+document.addEventListener('input',event=>{if(!event.target.matches('[data-search]')||!event.target.closest('#tenants'))return;const q=event.target.value.trim().toLocaleLowerCase('vi');event.target.closest('.screen').querySelectorAll('tbody tr').forEach(row=>{const extra=[...row.querySelectorAll('[data-search-text]')].map(item=>item.dataset.searchText||'').join(' ');row.style.display=(row.textContent+' '+extra).toLocaleLowerCase('vi').includes(q)?'':'none'})});
+
 </script>
 <script>
 const bloomMobileBuildCardBase=mobileBuildCard;mobileBuildCard=function(name,tr){let html=bloomMobileBuildCardBase(name,tr);if(!['tenants','leases'].includes(name))return html;const template=document.createElement('template');template.innerHTML=html;const card=template.content.querySelector('.mobile-card'),fields=card?.querySelector('.mobile-card-fields'),documentIndex=8,documentCell=tr.children[documentIndex],documentHtml=documentCell?.innerHTML?.trim()||'';if(name==='leases')fields?.querySelectorAll('.mobile-card-field').forEach(field=>{if(field.querySelector('span')?.textContent==='Tài liệu')field.remove()});if(documentCell&&documentHtml&&documentHtml!=='—'&&card){let actions=card.querySelector('.mobile-card-actions');if(!actions){actions=document.createElement('div');actions.className='mobile-card-actions';card.append(actions)}let actionGroup=actions.querySelector('.actions');if(!actionGroup){actionGroup=document.createElement('div');actionGroup.className='actions';while(actions.firstChild)actionGroup.append(actions.firstChild);actions.append(actionGroup)}const documentTemplate=document.createElement('template');documentTemplate.innerHTML=documentHtml;actionGroup.prepend(...documentTemplate.content.childNodes)}return template.innerHTML};
