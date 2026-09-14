@@ -85,6 +85,8 @@ create unique index if not exists tenants_identity_property_uidx on public.tenan
 create unique index if not exists visas_number_property_uidx on public.tenant_visas(property_id,visa_number) where visa_number is not null and btrim(visa_number)<>'';
 create index if not exists tenants_property_idx on public.tenants(property_id);
 create index if not exists leases_property_idx on public.leases(property_id);
+create index if not exists leases_room_idx on public.leases(room_id);
+create index if not exists leases_representative_tenant_idx on public.leases(representative_tenant_id);
 create index if not exists lease_tenants_tenant_idx on public.lease_tenants(tenant_id);
 create index if not exists tenant_visas_property_status_expiry_idx on public.tenant_visas(property_id,status,expiry_date);
 create index if not exists monthly_records_property_period_idx on public.monthly_room_records(property_id,billing_period_id);
