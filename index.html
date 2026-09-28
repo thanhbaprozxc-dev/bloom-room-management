@@ -139,6 +139,23 @@ nav();if(password){api('session').then(()=>{setAuthUiState(true);if(sessionStora
   function update(){const enabled=window.innerWidth>720,viewportHeight=window.innerHeight||document.documentElement.clientHeight;let active=null;document.querySelectorAll('.table-wrap').forEach(wrap=>{const table=wrap.querySelector('table'),rect=wrap.getBoundingClientRect(),overflow=table&&table.scrollWidth>wrap.clientWidth+1,visible=rect.bottom>0&&rect.top<viewportHeight;if(!enabled||!table||!overflow||!visible){hide(wrap);return}if(!active||rect.top<=0&&active.rect.top>0)active={wrap,table,rect}});if(!active)return;const {wrap,table,rect}=active,bar=ensure(wrap,table);document.querySelectorAll('.table-wrap').forEach(item=>{if(item!==wrap)hide(item)});bar.style.display='block';bar.style.left=`${Math.max(0,rect.left)}px`;bar.style.width=`${Math.max(0,wrap.clientWidth)}px`;bar._spacer.style.width=`${table.scrollWidth}px`;bar.scrollLeft=wrap.scrollLeft;wrap._floatingHeader?.classList.add('has-floating-scroll')}
   window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);new MutationObserver(()=>requestAnimationFrame(update)).observe(document.querySelector('.main')||document.body,{subtree:true,childList:true});setTimeout(update,0);
 })();
+</script><script>
+(function(){
+  if(typeof mobileBuildCard!=='function')return;
+  const bloomMobileBuildCardBase=mobileBuildCard;
+  mobileBuildCard=function(name,row){
+    const html=bloomMobileBuildCardBase(name,row);
+    if(name!=='tenants')return html;
+    const template=document.createElement('template');
+    template.innerHTML=html;
+    const cells=[...row.children],title=template.content.querySelector('.mobile-card-title'),meta=template.content.querySelector('.mobile-card-meta');
+    const nameMarkup=cells[0]?.querySelector('.tenant-name-with-flag')?.innerHTML||'';
+    const nationalityMarkup=cells[3]?.querySelector('.tenant-nationality')?.innerHTML||'';
+    if(title&&nameMarkup){title.innerHTML=nameMarkup;title.classList.add('tenant-name-with-flag')}
+    if(meta&&nationalityMarkup){meta.innerHTML=nationalityMarkup;meta.classList.add('tenant-nationality')}
+    return template.innerHTML;
+  };
+})();
 </script></body></html>
 <script>
 function bloomTenantLabel(tenant){return `${tenant?.full_name||'—'}${tenant?.identity_number?' · '+tenant.identity_number:''}`}
