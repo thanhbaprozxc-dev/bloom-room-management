@@ -47,16 +47,6 @@ VIEWER_PASSWORD=...
 
 `VIEWER_PASSWORD` không bắt buộc. Không đưa khóa vào `index.html` hoặc commit lên GitHub.
 
-Để bật chức năng đọc CCCD/hộ chiếu, thêm biến `DOCUMENT_OCR_API_KEY` dưới dạng **Secret** trong Vercel Project → Settings → Environment Variables, chọn Environment `Production` (và `Preview` nếu cần). Có thể giữ các giá trị mặc định sau:
-
-```text
-DOCUMENT_OCR_API_URL=https://api.openai.com/v1/responses
-DOCUMENT_OCR_MODEL=gpt-4.1-mini
-DOCUMENT_OCR_TIMEOUT_MS=20000
-```
-
-Sau khi lưu biến môi trường, cần Redeploy một deployment mới để function nhận cấu hình. API key chỉ được đọc ở server-side; không đặt trong `index.html`, biến có tiền tố `NEXT_PUBLIC_`, localStorage hoặc GitHub. Recognition chỉ trả dữ liệu để điền form, không tự tạo/cập nhật tenant và request OpenAI được gửi với `store:false`.
-
 ## Triển khai
 
 Đẩy toàn bộ thư mục lên nhánh `main`; Vercel sẽ tự triển khai. Sau khi đổi biến môi trường, vào Deployments và Redeploy.
