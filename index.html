@@ -454,7 +454,7 @@ const bloomMobileOptimizationStyle=document.createElement('style');bloomMobileOp
 @media(max-width:339px){.dashboard-filter{grid-template-columns:minmax(0,1fr)}.dashboard-filter>strong,.dashboard-filter>label,.dashboard-filter>.btn{grid-column:1}}
 @media(max-width:1023px){
   input[type="date"],input[type="month"]{max-width:100%;min-width:0;box-sizing:border-box;height:var(--mobile-control-height);min-height:var(--mobile-control-height);font-size:16px;justify-self:start}
-  #modalFields input[type="date"]{width:100%;max-width:100%;height:var(--mobile-control-height);min-height:var(--mobile-control-height);max-height:var(--mobile-control-height);padding-block:0;line-height:normal}
+  input[type="date"]{width:min(100%,190px)}
  input[type="month"]{width:min(100%,210px)}
  .dashboard-filter>label input[type="month"],#dashboardFrom,#dashboardTo{width:min(100%,clamp(160px,40vw,180px));justify-self:start}
  #invoicePeriod,#period{width:min(100%,210px);justify-self:start}
