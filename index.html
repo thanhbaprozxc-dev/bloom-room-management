@@ -454,13 +454,15 @@ const bloomMobileOptimizationStyle=document.createElement('style');bloomMobileOp
 @media(max-width:339px){.dashboard-filter{grid-template-columns:minmax(0,1fr)}.dashboard-filter>strong,.dashboard-filter>label,.dashboard-filter>.btn{grid-column:1}}
 @media(max-width:1023px){
   input[type="date"],input[type="month"]{max-width:100%;min-width:0;box-sizing:border-box;height:var(--mobile-control-height);min-height:var(--mobile-control-height);font-size:16px;justify-self:start}
-  input[type="date"]{width:min(100%,190px)}
+  #modalFields input[type="date"]{width:100%;max-width:100%}
  input[type="month"]{width:min(100%,210px)}
  .dashboard-filter>label input[type="month"],#dashboardFrom,#dashboardTo{width:min(100%,clamp(160px,40vw,180px));justify-self:start}
  #invoicePeriod,#period{width:min(100%,210px);justify-self:start}
- #modal{position:fixed;top:calc(20px + env(safe-area-inset-top));left:50%;right:auto;bottom:auto;transform:translateX(-50%);width:calc(100vw - 24px);max-width:650px;max-height:calc(100dvh - 40px - env(safe-area-inset-top));height:auto;margin:0;border-radius:18px;overflow:hidden}
+ #modal{position:fixed;top:calc(20px + env(safe-area-inset-top));left:50%;right:auto;bottom:auto;transform:translateX(-50%);width:calc(100vw - 24px);max-width:650px;max-height:calc(100dvh - 40px - env(safe-area-inset-top));height:auto;margin:0;border-radius:18px;overflow:hidden;touch-action:pan-y;overscroll-behavior-x:none}
+ #modal form,#modalFields,#modalFields .field,#modalFields .field.full,#modalFields .document-upload-manager{width:100%;max-width:100%;min-width:0;overflow-x:hidden;box-sizing:border-box}
+ #modalFields .field input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]),#modalFields .field select,#modalFields .field textarea,#modalFields .country-picker,#modalFields .country-picker-trigger{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
  #modal .modal-head{position:sticky;top:0;z-index:3;background:#fff}
- #modal .modal-body{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+ #modal .modal-body{min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;overscroll-behavior-x:none;touch-action:pan-y}
  #modal .modal-foot{position:sticky;bottom:0;z-index:3;background:#fff}
 }
 `;document.head.append(bloomMobileOptimizationStyle);
