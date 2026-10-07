@@ -669,6 +669,33 @@ const bloomCountryPickerStyle=document.createElement('style');bloomCountryPicker
 .country-picker{position:relative;display:grid;gap:6px;min-width:0;width:100%}.country-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);text-align:left}.country-picker-trigger:focus-visible{outline:3px solid #9bd5a1;outline-offset:2px}.country-picker-value{display:flex;align-items:center;gap:7px;min-width:0}.country-picker-value>[data-country-label]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.country-picker-flag{min-width:1.2em}.country-picker-chevron{font-size:18px;color:var(--muted);line-height:1}.country-picker-menu{position:absolute;left:0;z-index:1200;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 14px 34px #17200f2b}.country-picker-menu[hidden]{display:none!important}.country-picker-menu:not([hidden]){display:grid}.country-picker-search{width:calc(100% - 12px);height:42px;margin:6px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:#fbfcf9;color:var(--ink);font-size:16px}.country-picker-options{min-height:0;overflow-y:auto;padding:4px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.country-picker-option{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-height:44px;border:0;border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink);text-align:left;font-size:15px}.country-picker-option:hover,.country-picker-option:focus-visible,.country-picker-option[aria-selected="true"]{background:var(--green2);outline:none}.country-picker-option small{color:var(--muted);font-size:12px}.country-picker-empty{padding:14px;color:var(--muted);text-align:center}.tenant-name-with-flag,.tenant-nationality{display:inline-flex;align-items:center;gap:6px;min-width:0}.tenant-flag{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:1em;line-height:1}.tenant-flag-svg{display:block;width:1.35em;height:.9em;border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px #17200f24}.tenant-name-with-flag>span:last-child{min-width:0}.tenant-nationality{white-space:nowrap}#modal.country-picker-open,#modal.country-picker-open .modal-body{overflow:visible}@media(max-width:1023px){.country-picker-menu{max-width:calc(100vw - 16px);border-radius:14px}.country-picker-menu[hidden]{display:none!important}.country-picker-option{min-height:44px;padding-block:10px}}`;
  document.head.append(bloomCountryPickerStyle);
  document.querySelector('#modal')?.addEventListener('close',()=>document.querySelectorAll('[data-country-picker]').forEach(bloomCloseCountryPicker));
+const bloomModalScrollStyle=document.createElement('style');
+bloomModalScrollStyle.id='modal-scroll-lock';
+bloomModalScrollStyle.textContent=`
+html.modal-open,body.modal-open{overflow:hidden!important;overscroll-behavior:none}
+#modal,#modal.country-picker-open{max-height:calc(100dvh - 32px);overflow:hidden!important}
+#modal form{display:flex!important;flex-direction:column!important;min-height:0;max-height:calc(100dvh - 32px)}
+#modal .modal-head,#modal .modal-foot{flex:0 0 auto}
+#modal .modal-head{position:static!important}
+#modal .modal-body,#modal.country-picker-open .modal-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;touch-action:pan-y;scrollbar-gutter:stable}
+#modal .modal-foot{position:static!important}
+@media(max-width:1023px){
+  #modal{max-height:calc(100dvh - 16px - env(safe-area-inset-top))}
+  #modal form{max-height:calc(100dvh - 16px - env(safe-area-inset-top))}
+}
+`;
+document.head.append(bloomModalScrollStyle);
+const bloomTenantModal=document.querySelector('#modal');
+if(bloomTenantModal){
+  const syncBloomModalScrollLock=()=>{
+    const locked=bloomTenantModal.open;
+    document.documentElement.classList.toggle('modal-open',locked);
+    document.body.classList.toggle('modal-open',locked);
+  };
+  new MutationObserver(syncBloomModalScrollLock).observe(bloomTenantModal,{attributes:true,attributeFilter:['open']});
+  bloomTenantModal.addEventListener('close',syncBloomModalScrollLock);
+  syncBloomModalScrollLock();
+}
 FIELDS.tenants=FIELDS.tenants.map(field=>field[0]==='nationality'?[field[0],field[1],'country']:field);
 const bloomCountryOpenModalBase=openModal;openModal=async function(record=null){await bloomCountryOpenModalBase(record);if(current!=='tenants')return;const field=document.querySelector('#modalForm input[name="nationality"]')?.closest('.field');if(!field)return;const raw=field.querySelector('input[name="nationality"]')?.value||'';field.innerHTML='<label>Quốc tịch</label>'+bloomCountryPickerMarkup(raw);bloomInitCountryPicker(field.querySelector('[data-country-picker]'))};
 function bloomRenderTenantNationality(){document.querySelectorAll('#tenantsBody tr').forEach(row=>{const nameCell=row.children[0],nationalityCell=row.children[3];if(!nameCell||!nationalityCell||nameCell.querySelector('.tenant-name-with-flag'))return;const name=nameCell.textContent.trim(),nationality=nationalityCell.textContent.trim()==='—'?'':nationalityCell.textContent.trim();nameCell.innerHTML=bloomTenantNameMarkup(name,nationality);nationalityCell.innerHTML=bloomCountryDisplayMarkup(nationality)})}
