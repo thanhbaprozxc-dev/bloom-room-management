@@ -727,6 +727,10 @@ bloomStyledSelectStyle.textContent=`
 @media(max-width:1023px){.bloom-select.property-picker{max-width:none;width:100%}.bloom-select.property-picker .bloom-select-trigger{min-height:44px;height:44px}.bloom-select .country-picker-chevron{flex-basis:22px;width:22px;height:22px;margin-left:6px}.bloom-select .country-picker-chevron::before{width:8px;height:8px}}
 `;
 document.head.append(bloomStyledSelectStyle);
+const bloomStickyActionStyle=document.createElement('style');
+bloomStickyActionStyle.id='sticky-action-columns';
+bloomStickyActionStyle.textContent=`.table-wrap{position:relative}@media(min-width:721px){.table-wrap table[data-sticky-actions] th.sticky-action-column,.table-wrap table[data-sticky-actions] td.sticky-action-column{position:sticky;right:0;min-width:150px;background:#fff;z-index:5;box-shadow:-6px 0 12px #20251c14}.table-wrap table[data-sticky-actions] th.sticky-action-column{z-index:12;background:#f8faf5}.table-wrap table[data-sticky-actions] tbody tr:hover td.sticky-action-column{background:#fbfcf9}}`;
+document.head.append(bloomStickyActionStyle);
 let bloomCustomSelectUid=0;
 const bloomCustomSelectRegistry=new Set();
 function bloomCustomSelectLabel(select){return select?.options?.[select.selectedIndex]?.textContent?.trim()||''}
@@ -744,7 +748,11 @@ bloomEnhanceCustomSelect(document.querySelector('#propertyPicker'));
 document.querySelectorAll('#modalFields select[name="identity_type"]').forEach(bloomEnhanceCustomSelect);
 const bloomCustomSelectDomObserver=new MutationObserver(()=>document.querySelectorAll('#propertyPicker,#modalFields select[name="identity_type"]').forEach(bloomEnhanceCustomSelect));
 bloomCustomSelectDomObserver.observe(document.body,{childList:true,subtree:true});
- document.querySelector('#modal')?.addEventListener('close',()=>document.querySelectorAll('[data-country-picker]').forEach(bloomCloseCountryPicker));
+function bloomMarkStickyActionColumns(){document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead tr:first-child th')],actionIndexes=new Set(headers.map((header,index)=>header.textContent.replace(/\s+/g,' ').trim().toLocaleLowerCase('vi-VN')==='thao tác'?index:-1).filter(index=>index>=0));if(!actionIndexes.size){table.removeAttribute('data-sticky-actions');table.querySelectorAll('.sticky-action-column').forEach(cell=>cell.classList.remove('sticky-action-column'));return}table.dataset.stickyActions='true';headers.forEach((header,index)=>header.classList.toggle('sticky-action-column',actionIndexes.has(index)));table.querySelectorAll('tbody tr').forEach(row=>[...row.children].forEach((cell,index)=>cell.classList.toggle('sticky-action-column',actionIndexes.has(index))))})}
+bloomMarkStickyActionColumns();
+const bloomStickyActionObserver=new MutationObserver(bloomMarkStickyActionColumns);
+bloomStickyActionObserver.observe(document.body,{childList:true,subtree:true});
+  document.querySelector('#modal')?.addEventListener('close',()=>document.querySelectorAll('[data-country-picker]').forEach(bloomCloseCountryPicker));
 const bloomModalScrollStyle=document.createElement('style');
 bloomModalScrollStyle.id='modal-scroll-lock';
 bloomModalScrollStyle.textContent=`
