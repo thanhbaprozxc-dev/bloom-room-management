@@ -727,16 +727,14 @@ bloomStyledSelectStyle.textContent=`
 @media(max-width:1023px){.bloom-select.property-picker{max-width:none;width:100%}.bloom-select.property-picker .bloom-select-trigger{min-height:44px;height:44px}.bloom-select .country-picker-chevron{flex-basis:22px;width:22px;height:22px;margin-left:6px}.bloom-select .country-picker-chevron::before{width:8px;height:8px}}
 `;
 document.head.append(bloomStyledSelectStyle);
-const bloomStickyActionStyle=document.createElement('style');
-bloomStickyActionStyle.id='sticky-action-columns';
-bloomStickyActionStyle.textContent=`.table-wrap{position:relative}@media(min-width:1024px){html,body{height:100%;overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden}.main{height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto}.table-wrap{height:clamp(360px,70dvh,680px);max-height:calc(100dvh - 220px);overflow:auto;overscroll-behavior:contain}.table-wrap table[data-sticky-actions] th.sticky-action-column,.table-wrap table[data-sticky-actions] td.sticky-action-column,.table-wrap table[data-sticky-actions] th[data-column="actions"],.table-wrap table[data-sticky-actions] td[data-column="actions"]{position:sticky;right:0;width:1%;min-width:max-content;padding-left:10px;padding-right:10px;white-space:nowrap;background:#fff;z-index:25;box-shadow:-6px 0 12px #20251c14}.table-wrap table[data-sticky-actions] th.sticky-action-column,.table-wrap table[data-sticky-actions] th[data-column="actions"]{z-index:35;background:#f8faf5}.table-wrap table[data-sticky-actions] tbody tr:hover td.sticky-action-column,.table-wrap table[data-sticky-actions] tbody tr:hover td[data-column="actions"]{background:#fbfcf9}.table-wrap table[data-sticky-actions] td.sticky-action-column .actions,.table-wrap table[data-sticky-actions] td[data-column="actions"] .actions{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;white-space:nowrap;width:max-content;min-width:max-content}}`;
- document.head.append(bloomStickyActionStyle);
  const bloomStickyActionColumnFix=document.createElement('style');
  bloomStickyActionColumnFix.id='sticky-action-column-fix';
  bloomStickyActionColumnFix.textContent=`
  @media(min-width:1024px){
-   html,body{overflow-x:hidden}
-    .table-wrap{position:relative;overflow-x:auto;overflow-y:auto;overscroll-behavior:contain;isolation:isolate}
+    html,body{height:100%;overflow-x:hidden;overflow-y:hidden}
+    .app{height:100dvh;min-height:0;overflow:hidden}
+    .main{height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto}
+    .table-wrap{position:relative;height:clamp(360px,70dvh,680px);max-height:calc(100dvh - 220px);overflow-x:auto;overflow-y:auto;overscroll-behavior:contain;isolation:isolate}
     .table-wrap>table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
     .table-wrap>table>thead th{position:sticky;top:0;z-index:30;background:#f8faf5;background-clip:padding-box;box-shadow:0 1px 0 var(--line)}
     .table-wrap>table>tbody>tr>td{position:relative;z-index:1}
