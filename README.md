@@ -8,6 +8,7 @@ Webapp quản lý phòng chạy trên Vercel, dùng Supabase PostgreSQL làm dat
 - Danh sách nhiều tòa nhà, có mã riêng và chức năng thêm, sửa, xóa an toàn.
 - Bộ chọn tòa nhà dùng chung; Phòng, Khách thuê, Hợp đồng, Dữ liệu tháng, Thu tiền, Visa và Báo cáo tự lọc theo tòa nhà.
 - Quản lý phòng, khách thuê, hợp đồng và lịch sử.
+- Quản lý saler/người dẫn khách, gắn saler tùy chọn vào hợp đồng và theo dõi hoa hồng theo snapshot.
 - Nhập điện, nước, dịch vụ, nợ cũ theo từng tháng.
 - Phát hành hóa đơn, thanh toán một phần hoặc toàn bộ.
 - Phát hành hóa đơn không khóa kỳ; dữ liệu từng phòng vẫn sửa được khi hóa đơn chưa có thanh toán. Phòng sẽ tự khóa sau khi ghi nhận khoản thu đầu tiên.
@@ -25,6 +26,8 @@ Mở Supabase → SQL Editor, chạy toàn bộ `supabase/schema.sql`. Tệp t�
 Tệp schema có thể chạy lại trên database đã tồn tại. Phiên bản hiện tại bổ sung mã hóa đơn theo tòa nhà, trạng thái khóa kỳ, thông tin hủy hóa đơn, khóa chống ghi trùng thanh toán và hàm transaction `record_payment`.
 
 Sau khi cập nhật từ phiên bản cũ, chạy thêm `supabase/lease_deposit_tracking.sql` một lần trong Supabase SQL Editor để bổ sung trạng thái tiền cọc và ngày hoàn cọc. Migration này dùng `IF NOT EXISTS`, giữ nguyên `deposit_amount` và `deposit_refunded` hiện có.
+
+Để bật quản lý saler và hoa hồng môi giới, chạy tiếp `supabase/sales_agents_and_commissions.sql` sau migration tiền cọc. Tệp chỉ tạo bảng, cột, ràng buộc và chỉ mục cần thiết; không xóa hoặc backfill dữ liệu hợp đồng hiện có.
 
 ## Liên kết dữ liệu
 
