@@ -769,6 +769,20 @@ bloomStickyActionStyle.textContent=`.table-wrap{position:relative}@media(min-wid
      min-width:max-content;
      white-space:nowrap;
    }
+    #rooms .table-wrap>table[data-sticky-actions] th.sticky-action-column,
+    #rooms .table-wrap>table[data-sticky-actions] td.sticky-action-column,
+    #rooms .table-wrap>table[data-sticky-actions] th[data-column="actions"],
+    #rooms .table-wrap>table[data-sticky-actions] td[data-column="actions"]{
+      width:1%;
+      min-width:96px;
+      max-width:120px;
+    }
+    #rooms .table-wrap>table[data-sticky-actions] td.sticky-action-column .actions,
+    #rooms .table-wrap>table[data-sticky-actions] td[data-column="actions"] .actions{
+      width:100%;
+      min-width:0;
+      justify-content:flex-end;
+    }
  }
  `;
  document.head.append(bloomStickyActionColumnFix);
