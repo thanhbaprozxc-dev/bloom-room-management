@@ -735,9 +735,11 @@ document.head.append(bloomStyledSelectStyle);
     .app{height:100dvh;min-height:0;overflow:hidden}
     .main{height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto}
     .table-wrap{position:relative;height:clamp(360px,70dvh,680px);max-height:calc(100dvh - 220px);overflow-x:auto;overflow-y:auto;overscroll-behavior:contain;isolation:isolate}
-    .table-wrap>table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
-    .table-wrap>table>thead th{position:sticky;top:0;z-index:30;background:#f8faf5;background-clip:padding-box;box-shadow:0 1px 0 var(--line)}
-    .table-wrap>table>tbody>tr>td{position:relative;z-index:1}
+    .table-wrap>table{position:relative;width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
+    .table-wrap>table>thead{position:sticky;top:0;z-index:100}
+    .table-wrap>table>thead th{position:sticky;top:0;z-index:110;background:#f8faf5;background-clip:padding-box;box-shadow:0 1px 0 var(--line)}
+    .table-wrap>table>tbody{position:relative;z-index:0}
+    .table-wrap>table>tbody>tr>td{position:relative;z-index:1;background:#fff;background-clip:padding-box}
     .table-wrap>table[data-sticky-actions] th.sticky-action-column,
     .table-wrap>table[data-sticky-actions] td.sticky-action-column,
     .table-wrap>table[data-sticky-actions] th[data-column="actions"],
@@ -749,13 +751,14 @@ document.head.append(bloomStyledSelectStyle);
      white-space:nowrap;
      background:#fff;
      background-clip:padding-box;
-      z-index:20;
+     box-sizing:border-box;
+     z-index:20;
      box-shadow:-6px 0 12px #20251c14;
    }
     .table-wrap>table[data-sticky-actions] th.sticky-action-column,
     .table-wrap>table[data-sticky-actions] th[data-column="actions"]{
       top:0;
-      z-index:50;
+      z-index:200;
      background:#f8faf5;
    }
     .table-wrap>table[data-sticky-actions] tbody tr:hover td.sticky-action-column,
