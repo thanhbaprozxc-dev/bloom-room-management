@@ -24,6 +24,8 @@ Mở Supabase → SQL Editor, chạy toàn bộ `supabase/schema.sql`. Tệp t�
 
 Tệp schema có thể chạy lại trên database đã tồn tại. Phiên bản hiện tại bổ sung mã hóa đơn theo tòa nhà, trạng thái khóa kỳ, thông tin hủy hóa đơn, khóa chống ghi trùng thanh toán và hàm transaction `record_payment`.
 
+Sau khi cập nhật từ phiên bản cũ, chạy thêm `supabase/lease_deposit_tracking.sql` một lần trong Supabase SQL Editor để bổ sung trạng thái tiền cọc và ngày hoàn cọc. Migration này dùng `IF NOT EXISTS`, giữ nguyên `deposit_amount` và `deposit_refunded` hiện có.
+
 ## Liên kết dữ liệu
 
 - `properties.id` → `rooms.property_id`, `property_settings.property_id`, `billing_periods.property_id`.
