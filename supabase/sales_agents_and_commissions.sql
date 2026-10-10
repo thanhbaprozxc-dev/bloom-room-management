@@ -32,7 +32,7 @@ create table if not exists public.lease_commissions(
   sales_agent_id uuid not null references public.sales_agents(id) on delete restrict,
   sales_agent_name_snapshot text not null,
   monthly_rent_snapshot numeric(14,2) not null check(monthly_rent_snapshot>=0),
-  commission_months integer not null check(commission_months>0),
+  commission_months integer not null check(commission_months>=0),
   commission_rate_snapshot numeric(5,2) not null check(commission_rate_snapshot between 0 and 100),
   commission_base_amount numeric(14,2) not null check(commission_base_amount>=0),
   commission_amount numeric(14,2) not null check(commission_amount>=0),
