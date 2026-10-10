@@ -29,13 +29,16 @@ Sau khi cập nhật từ phiên bản cũ, chạy thêm `supabase/lease_deposit
 
 Để bật quản lý saler và hoa hồng môi giới, chạy tiếp `supabase/sales_agents_and_commissions.sql` sau migration tiền cọc. Tệp chỉ tạo bảng, cột, ràng buộc và chỉ mục cần thiết; không xóa hoặc backfill dữ liệu hợp đồng hiện có.
 
+Để bật màn hình hợp nhất `Dữ liệu tháng & Thu tiền`, chạy tiếp `supabase/merge_monthly_billing_and_payment_workflow.sql`. Migration này không xóa dữ liệu; nó bổ sung cờ chốt chỉ số cuối kỳ, `invoice_items`, `payment_batches`, loại hóa đơn và hai RPC `issue_invoice`/`record_payment_batch`. Hóa đơn và payment cũ vẫn giữ nguyên, còn API `record_payment` cũ vẫn được giữ để tương thích.
+
 ## Liên kết dữ liệu
 
 - `properties.id` → `rooms.property_id`, `property_settings.property_id`, `billing_periods.property_id`.
 - `rooms.id` → `leases.room_id`, `monthly_room_records.room_id`.
 - `tenants.id` → `leases.representative_tenant_id`, `lease_tenants.tenant_id`, `tenant_visas.tenant_id`.
 - `billing_periods.id` → `monthly_room_records.billing_period_id`.
-- `monthly_room_records.id` → `invoices.record_id` → `payments.invoice_id`.
+- `monthly_room_records.id` → nhiều `invoices.record_id` → `invoice_items` và `payments.invoice_id`.
+- `payment_batches.id` → các payment tiền mặt/chuyển khoản của cùng một lần thu.
 
 Các khóa chính dùng UUID. `property_code` là mã nghiệp vụ duy nhất để tìm và nhận biết tòa nhà. Tòa nhà còn phòng hoặc dữ liệu liên quan sẽ không thể bị xóa.
 
