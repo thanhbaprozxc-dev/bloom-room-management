@@ -1,5 +1,113 @@
 -- Contract-anchored collection cycles and FIFO payment allocation.
 -- Additive migration: legacy monthly records, invoices and payments are kept.
+-- Run this entire file in Supabase SQL Editor. It also installs the schema
+-- prerequisites from merge_monthly_billing_and_payment_workflow.sql when that
+-- migration was skipped. The existing Bloom base schema is still required.
+
+begin;
+
+-- Diagnose a wrong database/schema before changing anything. A similarly named
+-- table outside public is not evidence that the application's table exists.
+do $$
+declare
+  t text;
+  other_relations text;
+begin
+  foreach t in array array['properties','rooms','tenants','leases','billing_periods','monthly_room_records','invoices','payments'] loop
+    if to_regclass(format('public.%I',t)) is null then
+      raise exception 'Thiếu bảng nền public.%. Hãy kiểm tra đúng project/database Bloom và schema trước khi chạy cập nhật.',t;
+    end if;
+  end loop;
+  foreach t in array array['invoice_items','payment_batches','payment_allocations','customer_credits'] loop
+    if to_regclass(format('public.%I',t)) is null then
+      select string_agg(format('%I.%I',n.nspname,c.relname),', ')
+      into other_relations
+      from pg_class c join pg_namespace n on n.oid=c.relnamespace
+      where c.relname=t and c.relkind in('r','p','v','m','f')
+        and n.nspname not in('public','pg_catalog','information_schema')
+        and n.nspname not like 'pg_toast%' and n.nspname not like 'pg_temp%';
+      if other_relations is not null then
+        raise exception 'Thiếu public.% nhưng tìm thấy %. Cần kiểm tra schema trước; migration không tự tạo bảng trùng hoặc di chuyển dữ liệu.',t,other_relations;
+      end if;
+    end if;
+  end loop;
+end $$;
+
+-- Bootstrap the unified-billing schema, not its older RPC implementations.
+-- CREATE must precede ALTER, foreign keys, indexes and %rowtype references.
+alter table public.monthly_room_records
+  add column if not exists electric_end_entered boolean not null default false,
+  add column if not exists water_end_entered boolean not null default false;
+
+alter table public.invoices
+  add column if not exists invoice_type text not null default 'combined',
+  add column if not exists parent_invoice_id uuid references public.invoices(id) on delete restrict,
+  add column if not exists coverage_start date,
+  add column if not exists coverage_end date;
+
+do $$ begin
+  if not exists(select 1 from pg_constraint where conname='invoices_invoice_type_check' and conrelid='public.invoices'::regclass) then
+    alter table public.invoices add constraint invoices_invoice_type_check
+      check(invoice_type in('rent_advance','utility','final_settlement','adjustment','combined')) not valid;
+  end if;
+  if not exists(select 1 from pg_constraint where conname='invoices_coverage_range_check' and conrelid='public.invoices'::regclass) then
+    alter table public.invoices add constraint invoices_coverage_range_check
+      check(coverage_end is null or coverage_start is null or coverage_end>=coverage_start) not valid;
+  end if;
+end $$;
+
+-- Remove only the legacy one-invoice-per-record constraint, never invoice rows.
+do $$
+declare
+  c record;
+  record_attnum smallint;
+begin
+  select attnum into record_attnum from pg_attribute
+  where attrelid='public.invoices'::regclass and attname='record_id' and not attisdropped;
+  for c in
+    select conname from pg_constraint
+    where conrelid='public.invoices'::regclass and contype='u'
+      and conkey=array[record_attnum]::smallint[]
+  loop
+    execute format('alter table public.invoices drop constraint %I',c.conname);
+  end loop;
+end $$;
+
+create table if not exists public.invoice_items(
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  item_type text not null check(item_type in('rent','electricity','water','service_fee','other_fee','previous_debt','discount','adjustment')),
+  description text not null,
+  amount numeric(14,2) not null default 0,
+  quantity numeric(14,3) not null default 1,
+  unit_price numeric(14,2),
+  metadata jsonb,
+  created_at timestamptz not null default now(),
+  unique(invoice_id,item_type)
+);
+
+create table if not exists public.payment_batches(
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete restrict,
+  cash_amount numeric(14,2) not null default 0 check(cash_amount>=0),
+  transfer_amount numeric(14,2) not null default 0 check(transfer_amount>=0),
+  total_amount numeric(14,2) not null check(total_amount>0),
+  paid_at timestamptz not null default now(),
+  reference text,
+  notes text,
+  idempotency_key text unique,
+  created_at timestamptz not null default now()
+);
+
+alter table public.payments
+  add column if not exists batch_id uuid references public.payment_batches(id) on delete set null;
+alter table public.payment_batches add column if not exists idempotency_key text;
+
+create unique index if not exists payment_batches_idempotency_uidx
+  on public.payment_batches(idempotency_key) where idempotency_key is not null;
+create index if not exists invoice_items_invoice_idx on public.invoice_items(invoice_id);
+create index if not exists payment_batches_invoice_idx on public.payment_batches(invoice_id);
+create index if not exists payments_batch_idx on public.payments(batch_id);
 
 alter table public.leases
   add column if not exists initial_electricity_reading numeric(12,2);
@@ -11,6 +119,13 @@ alter table public.monthly_room_records
   add column if not exists due_date date,
   add column if not exists cycle_number integer,
   add column if not exists electric_start_confirmed boolean not null default false;
+
+-- Match the prerequisite migration for legacy meter readings only. Do not
+-- mark newer contract-cycle drafts as confirmed just by re-running this file.
+update public.monthly_room_records set electric_end_entered=true
+where cycle_number is null and not electric_end_entered and electric_end>electric_start;
+update public.monthly_room_records set water_end_entered=true
+where cycle_number is null and not water_end_entered and water_end>water_start;
 
 -- Existing records are intentionally not assigned a guessed meter baseline or
 -- contract cycle. They continue to work through the legacy calendar-month path.
@@ -80,13 +195,14 @@ do $$ begin
 end $$;
 
 do $$ declare t text; begin
-  foreach t in array array['payment_batches','payment_allocations','customer_credits'] loop
+  foreach t in array array['invoice_items','payment_batches','payment_allocations','customer_credits'] loop
     execute format('alter table public.%I enable row level security',t);
   end loop;
 end $$;
 
 -- The invoice RPC remains the single server-side source of truth for the
 -- current-cycle rules. Legacy rows (cycle_number is null) retain old behavior.
+drop function if exists public.issue_invoice(uuid,text,uuid,text,text[],date);
 drop function if exists public.issue_invoice(uuid,text,uuid,text,text[],date,date,date);
 create or replace function public.issue_invoice(
   p_property_id uuid,
@@ -328,3 +444,10 @@ begin
 end $$;
 revoke all on function public.record_payment_batch(uuid,numeric,numeric,timestamptz,text,text,text) from public;
 grant execute on function public.record_payment_batch(uuid,numeric,numeric,timestamptz,text,text,text) to service_role;
+
+notify pgrst, 'reload schema';
+commit;
+
+-- Both values must be non-null after a successful run.
+select to_regclass('public.payment_batches') as payment_batches,
+       to_regclass('public.invoice_items') as invoice_items;

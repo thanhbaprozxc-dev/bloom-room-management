@@ -31,7 +31,11 @@ Sau khi cập nhật từ phiên bản cũ, chạy thêm `supabase/lease_deposit
 
 Để bật màn hình hợp nhất `Dữ liệu tháng & Thu tiền`, chạy tiếp `supabase/merge_monthly_billing_and_payment_workflow.sql`. Migration này không xóa dữ liệu; nó bổ sung cờ chốt chỉ số cuối kỳ, `invoice_items`, `payment_batches`, loại hóa đơn và hai RPC `issue_invoice`/`record_payment_batch`. Hóa đơn và payment cũ vẫn giữ nguyên, còn API `record_payment` cũ vẫn được giữ để tương thích.
 
-Sau migration trên, chạy tiếp `supabase/collection_cycles_and_fifo_payments.sql` để dùng ngày bắt đầu hợp đồng làm mốc kỳ thu, lưu số điện đầu, phân bổ thanh toán FIFO, theo dõi phân bổ payment và tiền thừa khách hàng. Migration này chỉ bổ sung cột/bảng/RPC, giữ nguyên hóa đơn và thanh toán hiện có; các bản ghi cũ chưa có chu kỳ hợp đồng không bị tự đoán lại số điện đầu.
+Chạy toàn bộ `supabase/collection_cycles_and_fifo_payments.sql` để dùng ngày bắt đầu hợp đồng làm mốc kỳ thu, lưu số điện đầu, phân bổ thanh toán FIFO, theo dõi phân bổ payment và tiền thừa khách hàng. Tệp này cũng chạy trực tiếp được trên database Bloom cũ chưa chạy migration hợp nhất phía trên: nó tạo `payment_batches`, `invoice_items` và bổ sung các cột cần thiết trước khi thêm khóa ngoại, chỉ mục và RPC. Database vẫn phải có các bảng nền của ứng dụng; đây không phải tệp khởi tạo một database trống.
+
+`payment_batches` là bảng mới được bổ sung ở commit `839afa3` ngày 10/10/2026, dùng để gom tiền mặt/chuyển khoản của một lần thu. Bảng `payments` cũ vẫn giữ từng giao dịch. Lỗi `42P01: relation "public.payment_batches" does not exist` xuất hiện khi chạy bản cập nhật cũ vốn chỉ `ALTER TABLE` mà chưa tạo bảng từ migration trước đó; tên tham chiếu `public.payment_batches` là đúng.
+
+Migration cập nhật chạy trong một transaction và có thể chạy lại; giữ nguyên hóa đơn, thanh toán và các dòng chi tiết đã có. Khi chạy trực tiếp từ schema cũ, nó không suy đoán lại chi tiết hóa đơn lịch sử hoặc số điện đầu. Nếu thiếu bảng nền hoặc phát hiện bảng cùng tên ở schema khác, tệp dừng với thông báo cụ thể để kiểm tra đúng project/schema. Sau khi thành công, kết quả cuối hiển thị `payment_batches` và `invoice_items`, đồng thời yêu cầu PostgREST làm mới schema. Bản `DATABASE_MOI_BLOOM_APARTMENT.txt` chứa cùng SQL để copy; chỉ cần chạy một trong hai tệp, không cần chạy cả hai. Việc push code lên GitHub không tự chạy migration trong Supabase.
 
 ## Liên kết dữ liệu
 
