@@ -31,6 +31,8 @@ Sau khi cập nhật từ phiên bản cũ, chạy thêm `supabase/lease_deposit
 
 Để bật màn hình hợp nhất `Dữ liệu tháng & Thu tiền`, chạy tiếp `supabase/merge_monthly_billing_and_payment_workflow.sql`. Migration này không xóa dữ liệu; nó bổ sung cờ chốt chỉ số cuối kỳ, `invoice_items`, `payment_batches`, loại hóa đơn và hai RPC `issue_invoice`/`record_payment_batch`. Hóa đơn và payment cũ vẫn giữ nguyên, còn API `record_payment` cũ vẫn được giữ để tương thích.
 
+Sau migration trên, chạy tiếp `supabase/collection_cycles_and_fifo_payments.sql` để dùng ngày bắt đầu hợp đồng làm mốc kỳ thu, lưu số điện đầu, phân bổ thanh toán FIFO, theo dõi phân bổ payment và tiền thừa khách hàng. Migration này chỉ bổ sung cột/bảng/RPC, giữ nguyên hóa đơn và thanh toán hiện có; các bản ghi cũ chưa có chu kỳ hợp đồng không bị tự đoán lại số điện đầu.
+
 ## Liên kết dữ liệu
 
 - `properties.id` → `rooms.property_id`, `property_settings.property_id`, `billing_periods.property_id`.
